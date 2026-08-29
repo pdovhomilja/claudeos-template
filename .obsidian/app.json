@@ -1,0 +1,8 @@
+{
+  "attachmentFolderPath": "raw/assets",
+  "useMarkdownLinks": false,
+  "newLinkFormat": "shortest",
+  "newFileLocation": "folder",
+  "newFileFolderPath": "wiki",
+  "showFrontmatter": true
+}

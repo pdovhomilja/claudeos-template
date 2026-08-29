@@ -1,0 +1,5 @@
+# Graph = the user's knowledge (wiki/ + raw/ + root docs). Not tooling.
+.claude/
+.agents/
+skills-lock.json
+README.md
