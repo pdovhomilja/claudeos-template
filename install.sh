@@ -1,48 +1,208 @@
 #!/bin/bash
-# claudeOS installer for a new user (macOS or Linux).
-#   Laptop: curl -fsSL <url>/install.sh | bash
-#   Server: curl -fsSL <url>/install.sh | bash -s -- --server
-# Installs the tools, creates YOUR private repo from the template on YOUR GitHub account,
-# clones it to ~/claudeos and starts Claude Code on the first-time setup. Safe to re-run.
-set -euo pipefail
+# claudeOS installer for macOS and Linux. Written for people who have never used a terminal.
+#   Laptop: curl -fsSL https://raw.githubusercontent.com/pdovhomilja/claudeos-template/main/install.sh | bash
+#   Server: ... | bash -s -- --server
+# Installs everything into your home folder (no Homebrew needed), creates YOUR private copy of the
+# template on YOUR GitHub account, clones it to ~/claudeos and starts the assistant's first-time setup.
+# Safe to run again at any time: it skips what is done and continues where it stopped.
+# Everything runs inside main(), called on the last line, so a half-downloaded script does nothing.
+# Keep it bash 3.2 compatible (macOS /bin/bash).
+
 TEMPLATE="pdovhomilja/claudeos-template"
 DIR="$HOME/claudeos"
-SERVER=0; [ "${1:-}" = "--server" ] && SERVER=1
-export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
-say() { printf '\n== %s\n' "$1"; }
+BIN="$HOME/.local/bin"
+STEP="starting"
 
-say "Tools"
-case "$(uname -s)" in
-  Darwin)
-    command -v brew >/dev/null || { echo "Install Homebrew first (https://brew.sh), then run this again."; exit 1; }
-    for p in git gh; do command -v $p >/dev/null || brew install -q $p; done ;;
-  Linux)
-    command -v git >/dev/null && command -v gh >/dev/null || { sudo apt-get update -qq; sudo apt-get install -y -qq git gh curl; } ;;
-  *) echo "Unsupported OS. On Windows follow the README quick start."; exit 1 ;;
-esac
-command -v claude >/dev/null || curl -fsSL https://claude.ai/install.sh | bash
-command -v uv >/dev/null || curl -LsSf https://astral.sh/uv/install.sh | sh
-command -v graphify >/dev/null || uv tool install -q graphifyy
+say()  { printf '\n\033[1m%s\033[0m\n' "$1"; }
+info() { printf '   %s\n' "$1"; }
+wait_enter() { printf '\n   %s ' "${1:-Press Enter to continue.}"; read -r _ </dev/tty; }
+fail() {
+  printf '\n\033[31mStopped while %s.\033[0m\n' "$STEP"
+  [ -n "${1:-}" ] && printf '%s\n' "$1"
+  printf '\nNothing is broken. Paste the same command again and it continues where it stopped.\n'
+  printf 'If it stops here again, take a screenshot of this window and send it to whoever gave you the link.\n'
+  exit 1
+}
+trap 'fail' ERR
 
-say "GitHub"
-gh auth status >/dev/null 2>&1 || gh auth login -h github.com -p https -w </dev/tty
-gh auth setup-git
+download_gh() {
+  local v tmp os ext
+  v=$(curl -fsSLI -o /dev/null -w '%{url_effective}' https://github.com/cli/cli/releases/latest); v=${v##*/v}
+  tmp=$(mktemp -d)
+  if [ "$OS" = Darwin ]; then os=macOS; ext=zip; else os=linux; ext=tar.gz; fi
+  curl -fsSL -o "$tmp/gh.$ext" "https://github.com/cli/cli/releases/download/v$v/gh_${v}_${os}_${ARCH}.$ext"
+  if [ "$ext" = zip ]; then unzip -q "$tmp/gh.zip" -d "$tmp"; else tar -xzf "$tmp/gh.tar.gz" -C "$tmp"; fi
+  cp "$(find "$tmp" -path '*/bin/gh' -type f | head -1)" "$BIN/gh"
+  chmod +x "$BIN/gh"
+  rm -rf "$tmp"
+}
 
-if [ ! -d "$DIR/.git" ]; then
-  say "Your claudeOS repo"
-  read -r -p "Name of your new private repo [claudeos]: " NAME </dev/tty
-  NAME="${NAME:-claudeos}"
-  OWNER="$(gh api user -q .login)"
-  gh repo view "$OWNER/$NAME" >/dev/null 2>&1 || gh repo create "$NAME" --private --template "$TEMPLATE"
-  for _ in 1 2 3 4 5 6; do gh repo clone "$OWNER/$NAME" "$DIR" -- -q 2>/dev/null && break; sleep 5; done  # template copy is async
-  [ -d "$DIR/.git" ] || { echo "Could not clone $OWNER/$NAME. Re-run in a minute."; exit 1; }
-fi
+install_obsidian() {   # macOS only; the wiki is easiest to read in Obsidian
+  local v tmp dest=/Applications
+  v=$(curl -fsSLI -o /dev/null -w '%{url_effective}' https://github.com/obsidianmd/obsidian-releases/releases/latest); v=${v##*/v}
+  tmp=$(mktemp -d)
+  [ -w "$dest" ] || { dest="$HOME/Applications"; mkdir -p "$dest"; }
+  # one chain: called after `||`, where set -e does not apply
+  curl -fsSL -o "$tmp/o.dmg" "https://github.com/obsidianmd/obsidian-releases/releases/download/v$v/Obsidian-$v.dmg" \
+    && hdiutil attach -nobrowse -quiet -mountpoint "$tmp/mnt" "$tmp/o.dmg" \
+    && cp -R "$tmp/mnt/Obsidian.app" "$dest/"
+  local rc=$?
+  hdiutil detach -quiet "$tmp/mnt" 2>/dev/null
+  rm -rf "$tmp"
+  return $rc
+}
 
-if [ "$SERVER" = 1 ]; then
-  say "Server twin"
-  bash "$DIR/scripts/vm/bootstrap.sh" "$(git -C "$DIR" remote get-url origin)"
-  exit 0
-fi
+add_path_to_profile() {   # so a new Terminal window finds the tools in ~/.local/bin
+  local f
+  case "$(basename "${SHELL:-bash}")" in
+    zsh) f="$HOME/.zshrc" ;;
+    bash) if [ "$OS" = Darwin ]; then f="$HOME/.bash_profile"; else f="$HOME/.bashrc"; fi ;;
+    *) f="$HOME/.profile" ;;
+  esac
+  grep -qs 'local/bin' "$f" || printf '\nexport PATH="$HOME/.local/bin:$PATH"\n' >> "$f"
+}
 
-say "Done. Starting Claude Code: log in with your own Claude account, then it runs the setup."
-cd "$DIR" && exec claude "run the first-time setup" </dev/tty
+is_claudeos_repo() {   # $1 = owner/name; true if it is a copy of the template (from an earlier run)
+  [ "$(gh repo view "$1" --json templateRepository -q '.templateRepository.name // ""' 2>/dev/null)" = "claudeos-template" ] \
+    || gh api "repos/$1/contents/WIKI.md" >/dev/null 2>&1
+}
+
+main() {
+  set -Eeuo pipefail
+  local SERVER=0 LOGIN NAME n
+  [ "${1:-}" = "--server" ] && SERVER=1
+
+  STEP="checking this computer"
+  [ "$(id -u)" != 0 ] || fail "Please run it without 'sudo' and not as root: paste the command exactly as you got it."
+  { : </dev/tty; } 2>/dev/null || fail "This installer has to run in a Terminal window. Open Terminal, paste the command there and press Enter."
+  OS=$(uname -s)
+  case "$OS" in Darwin|Linux) ;; *) fail "This installer works on Mac and Linux. On Windows follow the README by hand." ;; esac
+  case "$(uname -m)" in arm64|aarch64) ARCH=arm64 ;; x86_64|amd64) ARCH=amd64 ;; *) fail "Unsupported processor: $(uname -m)." ;; esac
+  mkdir -p "$BIN"
+  export PATH="$BIN:$PATH"
+
+  say "claudeOS — your own AI assistant"
+  info "This takes about 10–15 minutes. You need:"
+  info "  • a Claude Pro or Max subscription (claude.ai)"
+  info "  • a free GitHub account (you can create one when the browser opens)"
+  [ "$OS" = Darwin ] && info "  • maybe your Mac password, once"
+  info "You can stop at any time by closing this window, and continue later by pasting the command again."
+  wait_enter "Press Enter to start."
+
+  say "1/6 Basic tools"
+  STEP="installing Apple's developer tools"
+  if [ "$OS" = Darwin ] && ! xcode-select -p >/dev/null 2>&1; then
+    xcode-select --install >/dev/null 2>&1 || true
+    info "A window from Apple opened. Click \"Install\", agree, and wait until it says done (5–20 minutes)."
+    info "If no window appears, look behind this one. This window waits for it."
+    n=0
+    until xcode-select -p >/dev/null 2>&1; do
+      sleep 20; n=$((n + 1)); [ $((n % 3)) = 0 ] && info "still waiting for Apple's installer…"
+      [ "$n" -lt 180 ] || fail "Apple's developer tools did not finish within an hour."
+    done
+  fi
+  STEP="installing git"
+  if [ "$OS" = Linux ] && ! command -v git >/dev/null; then
+    command -v apt-get >/dev/null || fail "Please install 'git' with your system's package manager first."
+    info "Your computer password may be asked for now (typing it shows nothing; that is normal)."
+    info "Installing git, please wait…"
+    sudo apt-get update -qq </dev/tty >/dev/null && sudo apt-get install -y -qq git ca-certificates </dev/tty >/dev/null 2>&1
+  fi
+  info "ok"
+
+  say "2/6 Assistant software"
+  add_path_to_profile
+  STEP="installing the GitHub tool"
+  command -v gh >/dev/null || download_gh
+  STEP="installing Claude Code"
+  command -v claude >/dev/null || curl -fsSL https://claude.ai/install.sh | bash >/dev/null
+  command -v claude >/dev/null || fail "Claude Code did not install."
+  STEP="installing uv"
+  command -v uv >/dev/null || curl -LsSf https://astral.sh/uv/install.sh | env UV_NO_MODIFY_PATH=1 sh >/dev/null 2>&1
+  STEP="installing graphify"
+  command -v graphify >/dev/null || uv tool install -q graphifyy >/dev/null 2>&1 || uv tool install -q graphifyy
+  STEP="installing Claude Code plugins"
+  { claude plugin marketplace add mksglu/context-mode
+    claude plugin install context-mode@context-mode
+    claude plugin marketplace add forrestchang/andrej-karpathy-skills
+    claude plugin install andrej-karpathy-skills@karpathy-skills
+    claude plugin marketplace add anthropics/claude-plugins-official
+    claude plugin install superpowers@claude-plugins-official; } >/dev/null 2>&1 \
+    || info "(some plugins will be installed during the first-time setup instead)"
+  if [ "$OS" = Darwin ] && [ "$SERVER" = 0 ] && [ ! -d /Applications/Obsidian.app ] && [ ! -d "$HOME/Applications/Obsidian.app" ]; then
+    STEP="installing Obsidian"
+    install_obsidian 2>/dev/null || info "(Obsidian skipped; you can download it later from obsidian.md)"
+  fi
+  info "ok"
+
+  say "3/6 Connect GitHub (stores your assistant's memory, privately)"
+  STEP="connecting GitHub"
+  n=0
+  until gh auth status >/dev/null 2>&1; do
+    n=$((n + 1)); [ "$n" -le 3 ] || fail "GitHub login did not finish."
+    info "What happens now:"
+    info "  1. \"Authenticate Git with your GitHub credentials?\": press Enter (yes)."
+    info "  2. A one-time code appears. Press Enter: your browser opens github.com."
+    info "  3. Log in, or click \"Sign up\" to create a free account first."
+    info "  4. Paste the code, click Continue and then Authorize. Then come back to this window."
+    gh auth login -h github.com -p https -w </dev/tty || info "That did not finish. Let's try again."
+  done
+  gh auth setup-git >/dev/null
+  LOGIN=$(gh api user -q .login)
+  git config --global user.name >/dev/null || git config --global user.name "$(gh api user -q '.name // .login')"
+  git config --global user.email >/dev/null || git config --global user.email "$(gh api user -q .id)+$LOGIN@users.noreply.github.com"
+  info "ok, logged in as $LOGIN"
+
+  say "4/6 Your private copy"
+  STEP="creating your private copy on GitHub"
+  if [ -d "$DIR/.git" ] && [ -f "$DIR/WIKI.md" ]; then
+    info "Found $DIR, keeping it."
+  else
+    if [ -e "$DIR" ]; then
+      mv "$DIR" "$DIR.old-$(date +%Y%m%d-%H%M%S)"
+      info "There was already a folder called claudeos; it was renamed, not deleted."
+    fi
+    NAME=claudeos; n=1
+    while gh repo view "$LOGIN/$NAME" >/dev/null 2>&1 && ! is_claudeos_repo "$LOGIN/$NAME"; do
+      n=$((n + 1)); NAME="claudeos-$n"
+    done
+    gh repo view "$LOGIN/$NAME" >/dev/null 2>&1 || gh repo create "$LOGIN/$NAME" --private --template "$TEMPLATE" >/dev/null
+    STEP="downloading your private copy"
+    n=0
+    until gh repo clone "$LOGIN/$NAME" "$DIR" -- -q >/dev/null 2>&1 && [ -f "$DIR/WIKI.md" ]; do
+      rm -rf "$DIR"; n=$((n + 1)); [ "$n" -le 24 ] || fail "GitHub is still preparing your copy. Wait a minute."
+      sleep 5   # GitHub copies the template in the background
+    done
+    info "ok: github.com/$LOGIN/$NAME (private), on this computer in $DIR"
+  fi
+
+  say "5/6 Shortcut"
+  STEP="creating the claudeos command"
+  printf '#!/bin/bash\ncd "$HOME/claudeos" && exec claude "$@"\n' > "$BIN/claudeos"
+  chmod +x "$BIN/claudeos"
+  info "ok: from now on, open Terminal and type  claudeos  then Enter."
+
+  if [ "$SERVER" = 1 ]; then
+    say "6/6 Server twin"
+    STEP="setting up the server twin"
+    bash "$DIR/scripts/vm/bootstrap.sh" "$(git -C "$DIR" remote get-url origin)"
+    exit 0
+  fi
+
+  say "6/6 Meet your assistant"
+  trap - ERR
+  if [ -f "$DIR/.claudeos-setup-done" ]; then
+    info "Everything is already set up. Starting your assistant."
+    cd "$DIR" && exec claude </dev/tty
+  fi
+  info "Claude Code starts now. What you will see:"
+  info "  1. A colour theme: press Enter."
+  info "  2. Login: choose your Claude account (subscription); the browser opens; click Authorize."
+  info "  3. \"Do you trust the files in this folder?\": choose Yes."
+  info "  4. Your assistant introduces itself and asks a few questions. Just answer in your own words."
+  info "To leave later, type /exit. To come back: open Terminal and type  claudeos"
+  wait_enter
+  cd "$DIR" && exec claude "run the first-time setup" </dev/tty
+}
+
+main "$@"
