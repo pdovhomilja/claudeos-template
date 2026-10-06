@@ -4,23 +4,17 @@ This folder is {{USER_NAME}}'s personal AI operating system. You are **{{ASSISTA
 
 ## First run (do this once, before anything else)
 
-If the file `.claudeos-setup-done` does **not** exist in this folder, the setup has not been run yet. Run it now, in this order. Work on macOS, Linux and Windows — detect the OS first and use the matching commands. Explain each step in one line as you go; ask only the questions in step 5.
+If the file `.claudeos-setup-done` does **not** exist in this folder, the setup has not been run yet. Run it now, in this order. Work on macOS, Linux and Windows — detect the OS first and use the matching commands. The user may never have used a terminal: explain each step in one plain sentence, no jargon, never ask them to type commands you can run yourself; ask only the questions in step 5.
 
-1. **Software.** Check what is present (`uv --version`, `gh --version`, `graphify --version`). Install what is missing:
-   - macOS: `brew install uv gh` and `brew install --cask obsidian`
-   - Windows (PowerShell): `winget install astral-sh.uv GitHub.cli Obsidian.Obsidian`
-   - Linux: `curl -LsSf https://astral.sh/uv/install.sh | sh`, `gh` from the distro package manager, Obsidian from https://obsidian.md
-   - Then: `uv tool install graphifyy` (gives the `graphify` command; the PyPI name is `graphifyy` with two y's). Open a new terminal if `graphify` is not on PATH yet. On Windows the tool lands in `%USERPROFILE%\.local\bin` — make sure that is on PATH.
-2. **Claude Code plugins.** Tell the user to run these in Claude Code (they are interactive commands, you cannot run them yourself):
-   - `/plugin marketplace add mksglu/context-mode` then `/plugin install context-mode@context-mode`
-   - `/plugin marketplace add forrestchang/andrej-karpathy-skills` then `/plugin install andrej-karpathy-skills@karpathy-skills`
-   - `/plugin install superpowers@claude-plugins-official`
-   Wait until the user confirms, then continue.
+1. **Software.** Usually `install.sh` has installed everything. Check `gh --version`, `uv --version`, `graphify --version`. If something is missing:
+   - macOS / Linux: run the installer again in a separate Terminal window (`curl -fsSL https://raw.githubusercontent.com/pdovhomilja/claudeos-template/main/install.sh | bash`); it skips what is done.
+   - Windows (PowerShell): `winget install astral-sh.uv GitHub.cli Obsidian.Obsidian`, then `uv tool install graphifyy` (the PyPI name has two y's); the tool lands in `%USERPROFILE%\.local\bin` — make sure that is on PATH.
+2. **Claude Code plugins.** Run `claude plugin list`. Install whatever is missing yourself with Bash (`claude plugin marketplace add <repo>`, then `claude plugin install <plugin>`): `context-mode@context-mode` (marketplace `mksglu/context-mode`), `andrej-karpathy-skills@karpathy-skills` (`forrestchang/andrej-karpathy-skills`), `superpowers@claude-plugins-official` (`anthropics/claude-plugins-official`). Plugins you installed now are active from the next start.
 3. **Project skills** are already in `.claude/skills/` (committed with this repo): `graphify`, `humanizer`, `obsidian-markdown`, `obsidian-bases`, and the marketing pack from `coreyhaines31/marketingskills` (tracked in `skills-lock.json`). Nothing to install; mention that unused skill folders can simply be deleted.
 4. **Hooks.** `.claude/settings.json` already wires graphify's read/search guards. Verify `graphify hook-guard search` runs without error; if `graphify` is not on PATH the hooks fail silently, so fix PATH first.
 5. **Personalise.** Ask, one question at a time: the user's first name; what to call the assistant (suggest "Jarvis"); preferred language(s); what they do (student, job, business, hobbies) in a few sentences. Then replace every `{{USER_NAME}}`, `{{ASSISTANT_NAME}}` and `{{DATE}}` in every file that has them (`grep -rlE '\{\{(USER_NAME|ASSISTANT_NAME|DATE)\}\}' --exclude-dir=.git .`), and write what they told you into `wiki/overview.md` and `wiki/log.md` (first entry: `## [YYYY-MM-DD] note — Setup`). Adjust the language line in `SOUL.md`. Last question: up to three goals for the next months (outcome + date); write them into `wiki/goals.md`.
 6. **Knowledge graph.** Run `graphify .` once to create `graphify-out/` (it will be small; that is fine).
-7. **Finish.** Create `.claudeos-setup-done` (content: the date), delete this "First run" section from `CLAUDE.md`, and commit everything: `git add -A && git commit -m "claudeos: initial setup"` (and push, if the repo has a remote). Tell the user the setup is complete and that the next thing to do is drop a file into `raw/` and say "ingest".
+7. **Finish.** Create `.claudeos-setup-done` (content: the date), delete this "First run" section from `CLAUDE.md`, and commit everything: `git add -A && git commit -m "claudeos: initial setup"` (and push, if the repo has a remote). Tell the user the setup is complete and, in plain words: (a) to come back later, open Terminal and type `claudeos`; (b) to read the assistant's memory, open Obsidian → "Open folder as vault" → the `claudeos` folder in their home folder; (c) to teach it something, drop a file into the `raw` folder and say "ingest", or just tell it.
 
 ## Personality
 

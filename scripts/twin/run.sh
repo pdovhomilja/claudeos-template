@@ -4,7 +4,7 @@
 #   mail mode is started by mail-poll.sh with the uids of new mail that must be handled now.
 set -uo pipefail
 export PATH="$HOME/.local/bin:/opt/homebrew/bin:$PATH"
-cd "$(dirname "$0")/../.."
+cd "$(dirname "$0")/../.." || exit 1
 
 HOUR=$(date +%H)
 MODE="${1:-$([ "$HOUR" -lt 10 ] && echo night || echo midday)}"

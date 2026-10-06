@@ -2,11 +2,29 @@
 
 A personal AI operating system for [Claude Code](https://claude.com/claude-code). The assistant (default name: **Jarvis**) keeps a persistent, compounding memory as a Markdown wiki — Andrej Karpathy's [LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) pattern — and you browse it in Obsidian.
 
-## Quick start (macOS, Linux, Windows)
+## Install (Mac or Linux, about 15 minutes)
+
+You need a **Claude Pro or Max** subscription and a free **GitHub** account (you can create it during the install).
+
+1. Open **Terminal**. On a Mac: press ⌘ + Space, type `Terminal`, press Enter.
+2. Copy this line, paste it into Terminal, press Enter:
+
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/pdovhomilja/claudeos-template/main/install.sh | bash
+   ```
+
+3. Follow what it says on screen. It installs everything, connects GitHub in your browser, makes **your own private copy** of this template (only you can see it), and starts your assistant, which asks you a few questions.
+4. Next time: open Terminal and type `claudeos`.
+
+If anything stops, paste the same line again: it continues where it stopped. Nothing is installed outside your home folder except Apple's developer tools and Obsidian on a Mac.
+
+On a server: `curl -fsSL https://raw.githubusercontent.com/pdovhomilja/claudeos-template/main/install.sh | bash -s -- --server` (also runs `scripts/vm/bootstrap.sh`: Tailscale, timers).
+
+## Quick start by hand (macOS, Linux, Windows)
 
 1. Install [Claude Code](https://claude.com/claude-code) and [Git](https://git-scm.com).
 2. Clone this repo, `cd` into it, run `claude`.
-3. Say **"run the first-time setup"**. The assistant follows the *First run* section of `CLAUDE.md`: installs `uv`, `gh`, Obsidian, and `graphify`; tells you which `/plugin` commands to run; asks your name and what to call it; then commits.
+3. Say **"run the first-time setup"**. The assistant follows the *First run* section of `CLAUDE.md`: checks the tools and plugins, asks your name, what to call it and your goals; then commits.
 4. Open the folder as a vault in Obsidian.
 5. Drop a file into `raw/` and say **"ingest"**. That is how the memory grows.
 
