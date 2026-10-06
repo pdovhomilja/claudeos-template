@@ -13,12 +13,30 @@ You need a **Claude Pro or Max** subscription and a free **GitHub** account (you
    curl -fsSL https://raw.githubusercontent.com/pdovhomilja/claudeos-template/main/install.sh | bash
    ```
 
-3. Follow what it says on screen. It installs everything, connects GitHub in your browser, makes **your own private copy** of this template (only you can see it), and starts your assistant, which asks you a few questions.
-4. Next time: open Terminal and type `claudeos`.
+3. First it checks what is already on your computer and shows a list, then waits for Enter:
 
-If anything stops, paste the same line again: it continues where it stopped. Nothing is installed outside your home folder except Apple's developer tools and Obsidian on a Mac.
+   ```
+   1/7 What is already on this computer
+      ✓  Apple developer tools    installed
+      ○  GitHub tool (gh)         will be installed
+      ✓  Claude Code              installed
+      ○  uv                       will be installed
+      ○  graphify                 will be installed
+      ○  Claude Code plugins      will be installed
+      –  Tailscale                not needed on a laptop
+      ✓  Obsidian                 installed
+      ○  GitHub login             you will log in (step 4)
 
-On a server: `curl -fsSL https://raw.githubusercontent.com/pdovhomilja/claudeos-template/main/install.sh | bash -s -- --server` (also runs `scripts/vm/bootstrap.sh`: Tailscale, timers).
+      Press Enter to install what is missing (4).
+   ```
+
+   ✓ is already there, ○ will be done now, – is not needed on this kind of machine. Only what is missing gets installed.
+4. Follow what it says on screen. It connects GitHub in your browser (check that it shows **your own** account), makes **your own private copy** of this template (only you can see it), and starts your assistant, which asks you a few questions.
+5. Next time: open Terminal and type `claudeos`.
+
+If anything stops, paste the same line again: it continues where it stopped. Nothing is installed outside your home folder except Apple's developer tools and Obsidian on a Mac, git on Linux, and Tailscale on a server.
+
+On a server: `curl -fsSL https://raw.githubusercontent.com/pdovhomilja/claudeos-template/main/install.sh | bash -s -- --server` (the checklist then includes Tailscale, which it installs; at the end it runs `scripts/vm/bootstrap.sh` for the timers).
 
 ## Quick start by hand (macOS, Linux, Windows)
 
