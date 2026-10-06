@@ -1,0 +1,2 @@
+# Senders whose mail to the assistant's mailbox wakes the twin within 2 minutes.
+# One address (name@example.com) or domain (example.com) per line. The owner's address always counts.
