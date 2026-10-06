@@ -67,6 +67,53 @@ is_claudeos_repo() {   # $1 = owner/name; true only if GitHub says it was create
   [ "$(gh repo view "$1" --json templateRepository -q '(.templateRepository.owner.login // "") + "/" + (.templateRepository.name // "")' 2>/dev/null)" = "$TEMPLATE" ]
 }
 
+has_obsidian() { [ -d /Applications/Obsidian.app ] || [ -d "$HOME/Applications/Obsidian.app" ]; }
+has_git() { if [ "$OS" = Darwin ]; then xcode-select -p >/dev/null 2>&1; else command -v git >/dev/null; fi; }
+has_plugins() {
+  local list
+  list=$(claude plugin list 2>/dev/null) || return 1
+  case "$list" in *context-mode@context-mode*) ;; *) return 1 ;; esac
+  case "$list" in *andrej-karpathy-skills@karpathy-skills*) ;; *) return 1 ;; esac
+  case "$list" in *superpowers@claude-plugins-official*) ;; *) return 1 ;; esac
+}
+
+row() {   # $1 = yes|no|later|skip, $2 = what, $3 = note; counts what is missing (no) in MISSING
+  local mark
+  case "$1" in
+    yes) mark='\033[32m✓\033[0m' ;;
+    no) mark='\033[33m○\033[0m'; MISSING=$((MISSING + 1)) ;;
+    later) mark='\033[33m○\033[0m' ;;
+    *) mark='–' ;;
+  esac
+  printf "   %b  %-24s %s\n" "$mark" "$2" "$3"
+}
+
+check() {   # $1 = what, $2 = command that succeeds when it is there
+  if eval "$2" >/dev/null 2>&1; then row yes "$1" "installed"; else row no "$1" "will be installed"; fi
+}
+
+preflight() {
+  MISSING=0
+  if [ "$OS" = Darwin ]; then check "Apple developer tools" has_git; else check "Git" has_git; fi
+  check "GitHub tool (gh)" "command -v gh"
+  check "Claude Code" "command -v claude"
+  check "uv" "command -v uv"
+  check "graphify" "command -v graphify"
+  check "Claude Code plugins" has_plugins
+  if [ "$SERVER" = 1 ]; then
+    check "Tailscale" "command -v tailscale"
+    row skip "Obsidian" "not needed on a server"
+  else
+    row skip "Tailscale" "not needed on a laptop"
+    if [ "$OS" = Darwin ]; then check "Obsidian" has_obsidian; else row skip "Obsidian" "optional, from obsidian.md"; fi
+  fi
+  if command -v gh >/dev/null && gh auth status >/dev/null 2>&1; then
+    row yes "GitHub login" "logged in as $(gh api user -q .login 2>/dev/null)"
+  else
+    row later "GitHub login" "you will log in (step 4)"
+  fi
+}
+
 main() {
   set -Eeuo pipefail
   local SERVER=0 LOGIN NAME n
@@ -87,9 +134,17 @@ main() {
   info "  • a free GitHub account (you can create one when the browser opens)"
   [ "$OS" = Darwin ] && info "  • maybe your Mac password, once"
   info "You can stop at any time by closing this window, and continue later by pasting the command again."
-  wait_enter "Press Enter to start."
 
-  say "1/6 Basic tools"
+  say "1/7 What is already on this computer"
+  STEP="checking what is installed"
+  preflight
+  if [ "$MISSING" = 0 ]; then
+    wait_enter "Everything is in place. Press Enter to continue."
+  else
+    wait_enter "Press Enter to install what is missing ($MISSING)."
+  fi
+
+  say "2/7 Basic tools"
   STEP="installing Apple's developer tools"
   if [ "$OS" = Darwin ] && ! xcode-select -p >/dev/null 2>&1; then
     xcode-select --install >/dev/null 2>&1 || true
@@ -110,7 +165,7 @@ main() {
   fi
   info "ok"
 
-  say "2/6 Assistant software"
+  say "3/7 Assistant software"
   add_path_to_profile
   STEP="installing the GitHub tool"
   command -v gh >/dev/null || download_gh
@@ -121,21 +176,26 @@ main() {
   command -v uv >/dev/null || curl -LsSf https://astral.sh/uv/install.sh | env UV_NO_MODIFY_PATH=1 sh >/dev/null 2>&1
   STEP="installing graphify"
   command -v graphify >/dev/null || uv tool install -q graphifyy >/dev/null 2>&1 || uv tool install -q graphifyy
+  if [ "$SERVER" = 1 ] && ! command -v tailscale >/dev/null; then
+    STEP="installing Tailscale"
+    curl -fsSL https://tailscale.com/install.sh | sh >/dev/null 2>&1
+    command -v tailscale >/dev/null || fail "Tailscale did not install."
+  fi
   STEP="installing Claude Code plugins"
-  { claude plugin marketplace add mksglu/context-mode
+  has_plugins || { claude plugin marketplace add mksglu/context-mode
     claude plugin install context-mode@context-mode
     claude plugin marketplace add forrestchang/andrej-karpathy-skills
     claude plugin install andrej-karpathy-skills@karpathy-skills
     claude plugin marketplace add anthropics/claude-plugins-official
     claude plugin install superpowers@claude-plugins-official; } >/dev/null 2>&1 \
     || info "(some plugins will be installed during the first-time setup instead)"
-  if [ "$OS" = Darwin ] && [ "$SERVER" = 0 ] && [ ! -d /Applications/Obsidian.app ] && [ ! -d "$HOME/Applications/Obsidian.app" ]; then
+  if [ "$OS" = Darwin ] && [ "$SERVER" = 0 ] && ! has_obsidian; then
     STEP="installing Obsidian"
     install_obsidian 2>/dev/null || info "(Obsidian skipped; you can download it later from obsidian.md)"
   fi
   info "ok"
 
-  say "3/6 Connect GitHub (stores your assistant's memory, privately)"
+  say "4/7 Connect GitHub (stores your assistant's memory, privately)"
   STEP="connecting GitHub"
   n=0
   until gh auth status >/dev/null 2>&1; do
@@ -166,7 +226,7 @@ main() {
   git config --global user.email >/dev/null || git config --global user.email "$(gh api user -q .id)+$LOGIN@users.noreply.github.com"
   info "ok"
 
-  say "4/6 Your private copy"
+  say "5/7 Your private copy"
   STEP="creating your private copy on GitHub"
   if [ -d "$DIR/.git" ] && is_claudeos_repo "$(git -C "$DIR" remote get-url origin 2>/dev/null | sed -E 's#^(https://github.com/|git@github.com:)##; s#\.git$##')"; then
     info "Found $DIR, keeping it."
@@ -189,21 +249,21 @@ main() {
     info "ok: github.com/$LOGIN/$NAME (private), on this computer in $DIR"
   fi
 
-  say "5/6 Shortcut"
+  say "6/7 Shortcut"
   STEP="creating the claudeos command"
   printf '#!/bin/bash\ncd "$HOME/claudeos" && exec claude "$@"\n' > "$BIN/claudeos"
   chmod +x "$BIN/claudeos"
   info "ok: from now on, open Terminal and type  claudeos  then Enter."
 
   if [ "$SERVER" = 1 ]; then
-    say "6/6 Server twin"
+    say "7/7 Server twin"
     STEP="setting up the server twin"
     [ -f "$DIR/scripts/vm/bootstrap.sh" ] || fail "$DIR is not a copy of the claudeOS template."
     bash "$DIR/scripts/vm/bootstrap.sh" "$(git -C "$DIR" remote get-url origin)"
     exit 0
   fi
 
-  say "6/6 Meet your assistant"
+  say "7/7 Meet your assistant"
   trap - ERR
   if [ -f "$DIR/.claudeos-setup-done" ]; then
     info "Everything is already set up. Starting your assistant."
