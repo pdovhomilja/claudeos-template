@@ -37,8 +37,28 @@ cp "$DIR"/scripts/vm/systemd/* ~/.config/systemd/user/
 sudo loginctl enable-linger "$USER"
 systemctl --user daemon-reload
 
+if command -v google-chrome >/dev/null && command -v tigervncserver >/dev/null; then
+  echo "== browser desktop"
+  VNC="$HOME/.config/tigervnc"; mkdir -p "$VNC"; chmod 700 "$VNC"
+  if [ ! -f "$VNC/passwd" ]; then   # VNC passwords are at most 8 characters
+    python3 -c 'import secrets, string; print("".join(secrets.choice(string.ascii_letters + string.digits) for _ in range(8)))' > "$VNC/password-plain.txt"
+    vncpasswd -f < "$VNC/password-plain.txt" > "$VNC/passwd"
+    chmod 600 "$VNC/passwd" "$VNC/password-plain.txt"
+  fi
+  printf '#!/bin/sh\nopenbox-session &\nexec google-chrome --no-first-run --start-maximized --password-store=basic\n' > "$VNC/xstartup"
+  chmod 755 "$VNC/xstartup"
+  systemctl --user enable --now claudeos-desktop.service claudeos-novnc.service
+fi
+
 echo; echo "Left for you (once):"
 tailscale status >/dev/null 2>&1 || echo "  - sudo tailscale up --ssh     (log in with YOUR Tailscale account)"
+if [ -f "$HOME/.config/tigervnc/passwd" ]; then
+  echo "  - browser: sudo tailscale serve --bg 6080   (once, after tailscale up; enable HTTPS if it asks)"
+  echo "    then open https://<this server's tailscale name>/vnc.html on your laptop or phone;"
+  echo "    password: cat ~/.config/tigervnc/password-plain.txt"
+  echo "  - in that Chrome: log in to claude.ai, install the \"Claude\" extension from the Chrome Web Store,"
+  echo "    then on the server run once: cd $DIR && claude --chrome   (connects Claude to that browser)"
+fi
 [ -f "$DIR/.env" ] || echo "  - cp $DIR/.env.example $DIR/.env and fill it in (Discord bot, optional mailbox)"
 echo "  - cd $DIR && claude, then /login with YOUR Claude account, and say 'run the first-time setup' if not done yet"
 echo "  - test: bash $DIR/scripts/twin/run.sh midday   (brief appears in Discord)"

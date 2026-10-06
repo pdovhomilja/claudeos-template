@@ -36,7 +36,7 @@ You need a **Claude Pro or Max** subscription and a free **GitHub** account (you
 
 If anything stops, paste the same line again: it continues where it stopped. Nothing is installed outside your home folder except Apple's developer tools and Obsidian on a Mac, git on Linux, and Tailscale on a server.
 
-On a server: `curl -fsSL https://raw.githubusercontent.com/pdovhomilja/claudeos-template/main/install.sh | bash -s -- --server` (the checklist then includes Tailscale, which it installs; at the end it runs `scripts/vm/bootstrap.sh` for the timers).
+On a server: `curl -fsSL https://raw.githubusercontent.com/pdovhomilja/claudeos-template/main/install.sh | bash -s -- --server` (the checklist then includes Tailscale and a browser, which it installs; at the end it runs `scripts/vm/bootstrap.sh` for the timers). The browser is Google Chrome in a small remote desktop that only your own devices can open, over Tailscale (`https://<server>/vnc.html`), so the assistant can use websites through Claude in Chrome. Chrome for Linux exists only for x86_64 servers.
 
 ## Quick start by hand (macOS, Linux, Windows)
 
