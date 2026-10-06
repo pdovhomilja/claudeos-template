@@ -1,0 +1,8 @@
+[Unit]
+Description=claudeOS mail + Discord check every 2 minutes, 08-23
+
+[Timer]
+OnCalendar=*-*-* 08..23:00/2:00
+
+[Install]
+WantedBy=timers.target

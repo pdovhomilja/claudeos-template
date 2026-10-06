@@ -1,0 +1,10 @@
+[Unit]
+Description=claudeOS twin runs
+
+[Timer]
+OnCalendar=*-*-* 07:30:00
+OnCalendar=*-*-* 13:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

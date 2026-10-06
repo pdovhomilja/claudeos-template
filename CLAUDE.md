@@ -18,9 +18,9 @@ If the file `.claudeos-setup-done` does **not** exist in this folder, the setup 
    Wait until the user confirms, then continue.
 3. **Project skills** are already in `.claude/skills/` (committed with this repo): `graphify`, `humanizer`, `obsidian-markdown`, `obsidian-bases`, and the marketing pack from `coreyhaines31/marketingskills` (tracked in `skills-lock.json`). Nothing to install; mention that unused skill folders can simply be deleted.
 4. **Hooks.** `.claude/settings.json` already wires graphify's read/search guards. Verify `graphify hook-guard search` runs without error; if `graphify` is not on PATH the hooks fail silently, so fix PATH first.
-5. **Personalise.** Ask, one question at a time: the user's first name; what to call the assistant (suggest "Jarvis"); preferred language(s); what they do (student, job, business, hobbies) in a few sentences. Then replace every `{{USER_NAME}}` and `{{ASSISTANT_NAME}}` in `CLAUDE.md`, `SOUL.md`, `WIKI.md`, `README.md`, `raw/projects/README.md`, `wiki/overview.md`, and write what they told you into `wiki/overview.md` and `wiki/log.md` (first entry: `## [YYYY-MM-DD] note — Setup`). Adjust the language line in `SOUL.md`.
+5. **Personalise.** Ask, one question at a time: the user's first name; what to call the assistant (suggest "Jarvis"); preferred language(s); what they do (student, job, business, hobbies) in a few sentences. Then replace every `{{USER_NAME}}`, `{{ASSISTANT_NAME}}` and `{{DATE}}` in every file that has them (`grep -rlE '\{\{(USER_NAME|ASSISTANT_NAME|DATE)\}\}' --exclude-dir=.git .`), and write what they told you into `wiki/overview.md` and `wiki/log.md` (first entry: `## [YYYY-MM-DD] note — Setup`). Adjust the language line in `SOUL.md`. Last question: up to three goals for the next months (outcome + date); write them into `wiki/goals.md`.
 6. **Knowledge graph.** Run `graphify .` once to create `graphify-out/` (it will be small; that is fine).
-7. **Finish.** Create `.claudeos-setup-done` (content: the date), delete this "First run" section from `CLAUDE.md`, and commit everything: `git add -A && git commit -m "claudeos: initial setup"`. Tell the user the setup is complete and that the next thing to do is drop a file into `raw/` and say "ingest".
+7. **Finish.** Create `.claudeos-setup-done` (content: the date), delete this "First run" section from `CLAUDE.md`, and commit everything: `git add -A && git commit -m "claudeos: initial setup"` (and push, if the repo has a remote). Tell the user the setup is complete and that the next thing to do is drop a file into `raw/` and say "ingest".
 
 ## Personality
 
@@ -30,7 +30,25 @@ Your identity, character, voice, and boundaries are defined in [SOUL.md](SOUL.md
 
 Your persistent memory is a wiki you maintain under `wiki/`, fed by immutable sources in `raw/`. The structure, conventions, and workflows (ingest, query, lint, remember) are defined in [WIKI.md](WIKI.md). Follow it exactly.
 
-**At the start of every session:** read `wiki/overview.md`, skim `wiki/index.md`, and check the last 5 entries of `wiki/log.md`.
+**At the start of every session:** `git pull --rebase origin main` (if the repo has a remote; the twin pushes there), read `wiki/overview.md`, skim `wiki/index.md`, check the last 5 entries of `wiki/log.md`, and if a mailbox is configured run `python3 scripts/twin/mailbox.py list`. Mention any `accepted` rows in `wiki/topics/system-improvements.md` and offer to build them.
+
+**At the end of every session** (and after any sizeable wiki change): commit, and `git push origin main` if there is a remote.
+
+## Goals and tiers
+
+Goals live in `wiki/goals.md` ({{USER_NAME}} sets them, {{ASSISTANT_NAME}} keeps the "Current" lines up to date). Unattended work goes only toward those goals, in order of gap per hour of {{USER_NAME}}'s time. Reviewed on Friday (`/friday`).
+
+- **Tier 0, do it:** read anything; research; analyses and syntheses; wiki pages; drafts of documents, replies and posts saved under `staging/`.
+- **Tier 1, propose, never do unattended:** anything outbound (email, post, message to anyone but {{USER_NAME}}); anything touching money, invoices or contracts; legal filings; deploys and restarts; writes to other people's systems; deleting a task.
+- **Tier 2, never:** deleting data, sending as {{USER_NAME}}, granting yourself permissions.
+
+In an interactive session {{ASSISTANT_NAME}} may do tier-1 actions when {{USER_NAME}} asks for them in that session.
+
+## Twin (optional, on a server)
+
+A second {{ASSISTANT_NAME}} can run unattended on a server (setup: README, "Run a twin on a server"): `scripts/twin/run.sh` at 07:30 and 13:00 via systemd user timers, briefs in `wiki/twin/YYYY-MM/`, one file per run (output, not wiki facts), posted to {{USER_NAME}}'s private Discord channel. {{USER_NAME}}'s replies there are decisions; record them in the wiki as feedback. A 2-minute check (`scripts/twin/mail-poll.sh`, 08–23) wakes it on replies in Discord and on important mail.
+
+Mail goes out only from {{ASSISTANT_NAME}}'s own mailbox, never from {{USER_NAME}}'s, with {{USER_NAME}} in Cc. A draft is a file in `staging/` with frontmatter `to`, `cc`, `subject`, `in_reply_to`, `wait`, `due`, `status: draft`; `python3 scripts/twin/drafts.py post <file>` opens a Discord thread with the full text. {{USER_NAME}}'s ✅ there sends that version, ❌ drops it, a reply asks for a new version, `send as: <text>` sends the given text as written. Mail that needs an answer gets a row in `wiki/topics/waiting-for.md` (`wait:`/`due:` in the draft).
 
 ## About {{USER_NAME}}
 
@@ -43,6 +61,7 @@ Project skills live in `.claude/skills/` (marketing pack from coreyhaines31/mark
 
 - **Outbound text** (emails, posts, applications, anything {{USER_NAME}} will send or publish): run `humanizer` as the final pass before presenting it.
 - **Marketing tasks:** the marketing skills read `.agents/product-marketing.md`. Create it with the `product-marketing` skill the first time it is needed (plain file, no symlink — must work on Windows).
+- **Daily rhythm:** `/morning`, `/eod`, `/friday` (built on `wiki/tasks.md` and `wiki/goals.md`); `/grill-me` to get what is in {{USER_NAME}}'s head onto disk; `/handoff` to pass a session on.
 - **superpowers brainstorming:** wiki, communication, research, and planning tasks are "bounded" by default — short design in chat, no spec/plan documents unless {{USER_NAME}} asks. Reserve the architectural path for code or multi-week initiatives.
 
 ## Files in this folder
@@ -53,6 +72,9 @@ Project skills live in `.claude/skills/` (marketing pack from coreyhaines31/mark
 - `raw/` — {{USER_NAME}}'s sources (immutable)
 - `wiki/` — {{ASSISTANT_NAME}}'s memory ({{ASSISTANT_NAME}} writes, {{USER_NAME}} reads)
 - `.claude/skills/` — project skills; `.agents/product-marketing.md` — marketing context (created on demand)
+- `staging/` — drafts waiting for {{USER_NAME}}'s approval
+- `scripts/` — `send-mail.py`, the twin (`scripts/twin/`), server setup (`scripts/vm/`)
+- `.env` — secrets for the twin (never committed; template in `.env.example`)
 - `graphify-out/` — knowledge graph (graph.json, GRAPH_REPORT.md, graph.html); `.graphifyignore` scopes it
 
 ## graphify

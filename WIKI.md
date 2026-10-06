@@ -29,6 +29,10 @@ wiki/
   sources/              # one summary page per raw source
   syntheses/            # answers, comparisons, analyses worth keeping
   tasks.md              # open to-dos and follow-ups, with owner and date
+  goals.md              # {{USER_NAME}}'s goals; the twin and /morning work toward these
+  twin/YYYY-MM/         # the twin's briefs, one file per run (output, not facts; no frontmatter)
+
+staging/                # drafts for {{USER_NAME}} (mail drafts carry frontmatter, see CLAUDE.md "Twin")
 ```
 
 ## Page conventions

@@ -18,5 +18,8 @@ graphify-out/.chunk_*
 # secrets
 .env
 
+# twin run logs and state
+runs/
+
 # Office lock files
 ~$*
