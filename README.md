@@ -2,7 +2,15 @@
 
 A personal AI operating system for [Claude Code](https://claude.com/claude-code). The assistant (default name: **Jarvis**) keeps a persistent, compounding memory as a Markdown wiki — Andrej Karpathy's [LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) pattern — and you browse it in Obsidian.
 
-## Quick start (macOS, Linux, Windows)
+## One-line install (macOS, Linux)
+
+```bash
+curl -fsSL <url>/install.sh | bash
+```
+
+Installs git, gh, Claude Code, uv and graphify, logs you into GitHub, creates **your own private repo** from this template, clones it to `~/claudeos` and starts Claude Code on the first-time setup (log in with your own Claude account). On a server add `-s -- --server`: it also runs `scripts/vm/bootstrap.sh` (Tailscale, timers) instead of starting Claude.
+
+## Quick start by hand (macOS, Linux, Windows)
 
 1. Install [Claude Code](https://claude.com/claude-code) and [Git](https://git-scm.com).
 2. Clone this repo, `cd` into it, run `claude`.
