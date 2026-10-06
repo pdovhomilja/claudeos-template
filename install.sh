@@ -62,9 +62,9 @@ add_path_to_profile() {   # so a new Terminal window finds the tools in ~/.local
   grep -qs 'local/bin' "$f" || printf '\nexport PATH="$HOME/.local/bin:$PATH"\n' >> "$f"
 }
 
-is_claudeos_repo() {   # $1 = owner/name; true if it is a copy of the template (from an earlier run)
-  [ "$(gh repo view "$1" --json templateRepository -q '.templateRepository.name // ""' 2>/dev/null)" = "claudeos-template" ] \
-    || gh api "repos/$1/contents/WIKI.md" >/dev/null 2>&1
+is_claudeos_repo() {   # $1 = owner/name; true only if GitHub says it was created from the template (an earlier run).
+  # Never guess from its files: someone's personal claudeOS looks the same and must never be reused.
+  [ "$(gh repo view "$1" --json templateRepository -q '(.templateRepository.owner.login // "") + "/" + (.templateRepository.name // "")' 2>/dev/null)" = "$TEMPLATE" ]
 }
 
 main() {
@@ -142,20 +142,33 @@ main() {
     n=$((n + 1)); [ "$n" -le 3 ] || fail "GitHub login did not finish."
     info "What happens now:"
     info "  1. \"Authenticate Git with your GitHub credentials?\": press Enter (yes)."
-    info "  2. A one-time code appears. Press Enter: your browser opens github.com."
-    info "  3. Log in, or click \"Sign up\" to create a free account first."
+    if [ "$SERVER" = 1 ]; then
+      info "  2. A one-time code appears. On your phone or laptop open github.com/login/device"
+    else
+      info "  2. A one-time code appears. Press Enter: your browser opens github.com."
+    fi
+    info "  3. Log in with the GitHub account of the person this assistant is for, or click \"Sign up\"."
     info "  4. Paste the code, click Continue and then Authorize. Then come back to this window."
     gh auth login -h github.com -p https -w </dev/tty || info "That did not finish. Let's try again."
   done
-  gh auth setup-git >/dev/null
   LOGIN=$(gh api user -q .login)
+  info "Logged in to GitHub as:  $LOGIN"
+  info "The assistant's private memory will live in this account. It must belong to the person the assistant is for."
+  printf '\n   Press Enter if that is right, or type  other  and Enter to log in with a different account: '
+  read -r answer </dev/tty
+  if [ "$answer" = "other" ]; then
+    gh auth logout -h github.com >/dev/null 2>&1 || true
+    info "Logged out. Paste the install command again and log in with the right account."
+    exit 0
+  fi
+  gh auth setup-git >/dev/null
   git config --global user.name >/dev/null || git config --global user.name "$(gh api user -q '.name // .login')"
   git config --global user.email >/dev/null || git config --global user.email "$(gh api user -q .id)+$LOGIN@users.noreply.github.com"
-  info "ok, logged in as $LOGIN"
+  info "ok"
 
   say "4/6 Your private copy"
   STEP="creating your private copy on GitHub"
-  if [ -d "$DIR/.git" ] && [ -f "$DIR/WIKI.md" ]; then
+  if [ -d "$DIR/.git" ] && is_claudeos_repo "$(git -C "$DIR" remote get-url origin 2>/dev/null | sed -E 's#^(https://github.com/|git@github.com:)##; s#\.git$##')"; then
     info "Found $DIR, keeping it."
   else
     if [ -e "$DIR" ]; then
@@ -185,6 +198,7 @@ main() {
   if [ "$SERVER" = 1 ]; then
     say "6/6 Server twin"
     STEP="setting up the server twin"
+    [ -f "$DIR/scripts/vm/bootstrap.sh" ] || fail "$DIR is not a copy of the claudeOS template."
     bash "$DIR/scripts/vm/bootstrap.sh" "$(git -C "$DIR" remote get-url origin)"
     exit 0
   fi
