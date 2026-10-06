@@ -34,7 +34,7 @@ if [ ! -d "$DIR/.git" ]; then
   NAME="${NAME:-claudeos}"
   OWNER="$(gh api user -q .login)"
   gh repo view "$OWNER/$NAME" >/dev/null 2>&1 || gh repo create "$NAME" --private --template "$TEMPLATE"
-  for i in 1 2 3 4 5 6; do gh repo clone "$OWNER/$NAME" "$DIR" -- -q 2>/dev/null && break; sleep 5; done  # template copy is async
+  for _ in 1 2 3 4 5 6; do gh repo clone "$OWNER/$NAME" "$DIR" -- -q 2>/dev/null && break; sleep 5; done  # template copy is async
   [ -d "$DIR/.git" ] || { echo "Could not clone $OWNER/$NAME. Re-run in a minute."; exit 1; }
 fi
 

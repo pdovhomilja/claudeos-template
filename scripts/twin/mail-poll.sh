@@ -6,7 +6,7 @@
 # Usage: mail-poll.sh [list]
 set -uo pipefail
 export PATH="$HOME/.local/bin:/opt/homebrew/bin:$PATH"
-cd "$(dirname "$0")/../.."
+cd "$(dirname "$0")/../.." || exit 1
 RUNS="$PWD/runs/twin"; mkdir -p "$RUNS"
 
 if [ "${1:-}" = "list" ]; then python3 scripts/twin/mailbox.py list; exit 0; fi
