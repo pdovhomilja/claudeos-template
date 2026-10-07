@@ -67,6 +67,20 @@ is_claudeos_repo() {   # $1 = owner/name; true only if GitHub says it was create
   [ "$(gh repo view "$1" --json templateRepository -q '(.templateRepository.owner.login // "") + "/" + (.templateRepository.name // "")' 2>/dev/null)" = "$TEMPLATE" ]
 }
 
+has_browser() { command -v google-chrome >/dev/null && command -v tigervncserver >/dev/null && command -v websockify >/dev/null; }
+
+install_browser() {   # server only: Chrome inside a remote desktop you open over Tailscale (set up by bootstrap.sh)
+  local tmp
+  info "Installing the browser and the remote desktop, please wait (a few minutes)…"
+  tmp=$(mktemp -d); chmod 755 "$tmp"
+  curl -fsSL -o "$tmp/chrome.deb" https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+  chmod 644 "$tmp/chrome.deb"
+  sudo apt-get update -qq </dev/tty >/dev/null
+  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq tigervnc-standalone-server tigervnc-tools openbox novnc websockify \
+    dbus-x11 fonts-liberation fonts-noto-color-emoji xfonts-base "$tmp/chrome.deb" </dev/tty >/dev/null 2>&1
+  rm -rf "$tmp"
+}
+
 has_obsidian() { [ -d /Applications/Obsidian.app ] || [ -d "$HOME/Applications/Obsidian.app" ]; }
 has_git() { if [ "$OS" = Darwin ]; then xcode-select -p >/dev/null 2>&1; else command -v git >/dev/null; fi; }
 has_plugins() {
@@ -102,9 +116,11 @@ preflight() {
   check "Claude Code plugins" has_plugins
   if [ "$SERVER" = 1 ]; then
     check "Tailscale" "command -v tailscale"
+    if [ "$ARCH" = amd64 ]; then check "Browser (Chrome)" has_browser; else row skip "Browser (Chrome)" "not available on ARM servers"; fi
     row skip "Obsidian" "not needed on a server"
   else
     row skip "Tailscale" "not needed on a laptop"
+    row skip "Browser on the server" "not needed on a laptop"
     if [ "$OS" = Darwin ]; then check "Obsidian" has_obsidian; else row skip "Obsidian" "optional, from obsidian.md"; fi
   fi
   if command -v gh >/dev/null && gh auth status >/dev/null 2>&1; then
@@ -180,6 +196,11 @@ main() {
     STEP="installing Tailscale"
     curl -fsSL https://tailscale.com/install.sh | sh >/dev/null 2>&1
     command -v tailscale >/dev/null || fail "Tailscale did not install."
+  fi
+  if [ "$SERVER" = 1 ] && [ "$ARCH" = amd64 ] && ! has_browser; then
+    STEP="installing the browser"
+    install_browser
+    has_browser || fail "The browser did not install."
   fi
   STEP="installing Claude Code plugins"
   has_plugins || { claude plugin marketplace add mksglu/context-mode

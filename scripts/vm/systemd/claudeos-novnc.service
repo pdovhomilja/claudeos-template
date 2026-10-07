@@ -1,0 +1,10 @@
+[Unit]
+Description=noVNC web viewer for the claudeOS desktop (localhost only; published on the tailnet by tailscale serve)
+After=claudeos-desktop.service
+
+[Service]
+ExecStart=/usr/bin/websockify --web /usr/share/novnc 127.0.0.1:6080 127.0.0.1:5901
+Restart=on-failure
+
+[Install]
+WantedBy=default.target
