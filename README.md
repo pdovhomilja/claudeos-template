@@ -36,7 +36,7 @@ You need a **Claude Pro or Max** subscription and a free **GitHub** account (you
 
 If anything stops, paste the same line again: it continues where it stopped. Nothing is installed outside your home folder except Apple's developer tools and Obsidian on a Mac, git on Linux, and Tailscale on a server.
 
-On a server: `curl -fsSL https://raw.githubusercontent.com/pdovhomilja/claudeos-template/main/install.sh | bash -s -- --server` (the checklist then includes Tailscale and a browser, which it installs; at the end it runs `scripts/vm/bootstrap.sh` for the timers). The browser is Google Chrome in a small remote desktop that only your own devices can open, over Tailscale (`https://<server>/vnc.html`), so the assistant can use websites through Claude in Chrome. Chrome for Linux exists only for x86_64 servers.
+On a server: `curl -fsSL https://raw.githubusercontent.com/pdovhomilja/claudeos-template/main/install.sh | bash -s -- --server` (the checklist then includes Tailscale and a browser, which it installs; at the end it runs `scripts/vm/bootstrap.sh` for the timers). The browser is Google Chrome in a small remote desktop that only your own devices can open, over Tailscale, so the assistant can use websites through Claude in Chrome; setup steps in [Browser on the server](#browser-on-the-server).
 
 ## Quick start by hand (macOS, Linux, Windows)
 
@@ -53,11 +53,23 @@ A second copy of the assistant can work unattended on a small Linux server: two 
 Each person runs their own: own repo, own server, own Claude subscription, own Tailscale, own Discord bot. Never share a copy that holds someone else's wiki.
 
 1. Push your claudeOS repo to a **private** GitHub repo.
-2. Ubuntu 24.04 server (2 vCPU / 4 GB / 40 GB is plenty), a user with sudo. Then:
-   `curl -fsSLO https://raw.githubusercontent.com/<you>/<repo>/main/scripts/vm/bootstrap.sh` (or copy it over) and `bash bootstrap.sh git@github.com:<you>/<repo>.git`
-3. It installs Claude Code, Tailscale, uv and graphify, creates a deploy key (add it to the repo with write access, re-run), clones to `~/claudeos` and installs the systemd timers. It prints what is left: `tailscale up`, `.env` from `.env.example`, `claude` → `/login`, a test run, enabling the timers.
+2. Ubuntu 24.04 server, x86_64 (4 vCPU / 8 GB / 64 GB with the browser; 2 vCPU / 4 GB without), a user with sudo. Log in as that user and run:
+   `curl -fsSL https://raw.githubusercontent.com/pdovhomilja/claudeos-template/main/install.sh | bash -s -- --server`
+3. It shows the checklist, installs Claude Code, Tailscale, uv, graphify and the browser, logs into **your** GitHub (open `github.com/login/device` on your phone or laptop), clones your copy to `~/claudeos`, installs the systemd timers and starts the browser desktop. It prints what is left: `tailscale up`, the browser steps below, `.env` from `.env.example`, `claude` → `/login`, a test run, enabling the timers.
 4. Discord: create a server and a bot (Developer Portal → Bot → token; scopes `bot`, permissions Send Messages, Create Public Threads, Send Messages in Threads, Read Message History, Add Reactions; Message Content intent on), invite it to one private channel, put token, channel id and your user id in `.env`.
 5. On your laptop keep working with `claude` in your own clone; the session pulls what the twin pushed.
+
+### Browser on the server
+
+The server has its own Google Chrome inside a small desktop, so the assistant can use websites (through Claude in Chrome) and you can watch or help it, e.g. to log in somewhere. Only your own devices on your Tailscale can open it. Once, after the install:
+
+1. On the server, connect Tailscale (skip if done): `sudo tailscale up --ssh`, open the link it prints, log in with **your** Tailscale account.
+2. Publish the desktop on your tailnet: `sudo tailscale serve --bg 6080`. The first time it may print a link to turn on HTTPS for your tailnet: open it, click Enable, run the command again. It prints the address, e.g. `https://my-server.tail1234.ts.net`.
+3. On your laptop or phone (with Tailscale on), open that address followed by `/vnc.html` and click **Connect**. The password: on the server, `cat ~/.config/tigervnc/password-plain.txt`.
+4. In that Chrome: log in to [claude.ai](https://claude.ai), then open the Chrome Web Store, search **Claude**, click **Add to Chrome**, and log in to the extension with the same account.
+5. On the server, once: `cd ~/claudeos && claude --chrome`, then ask "open example.com and tell me the page title". When it answers, the assistant can use the browser.
+
+Log in to websites in that Chrome yourself (through `/vnc.html`); the assistant then uses those logins. If the page stays black or says disconnected: `systemctl --user restart claudeos-desktop claudeos-novnc` on the server. Chrome for Linux exists only for x86_64, so ARM servers get no browser.
 
 ## Layout
 
