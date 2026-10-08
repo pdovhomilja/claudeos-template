@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Send a staged draft from the assistant's mailbox. Only on the owner's approval (tier 1).
 Usage: python3 scripts/twin/send-draft.py staging/<draft>.md
-Frontmatter: to, cc, subject, in_reply_to (threads it), wait/due (add a waiting-for row), status: draft
+Frontmatter: to, cc, subject, in_reply_to (threads it), wait/due (add a waiting-for row),
+             attach (comma-separated file paths, ~ allowed), status: draft
 """
 import os, re, subprocess, sys, tempfile, time
 
@@ -18,6 +19,8 @@ with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False) as body:
 cmd = ["python3", os.path.join(ROOT, "scripts/send-mail.py"), "--to", fm["to"], "--subject", fm["subject"], "--body-file", body.name]
 for k in ("cc", "in_reply_to", "wait", "due"):
     if fm.get(k): cmd += ["--" + k.replace("_", "-"), fm[k]]
+for f in filter(None, (x.strip() for x in fm.get("attach", "").split(","))):
+    cmd += ["--attach", os.path.expanduser(f)]
 out = subprocess.run(cmd, capture_output=True, text=True)
 print(out.stdout + out.stderr, end="")
 mid = re.search(r"Message-ID: (\S+)", out.stdout)
