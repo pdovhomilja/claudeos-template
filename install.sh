@@ -89,6 +89,8 @@ has_plugins() {
   case "$list" in *context-mode@context-mode*) ;; *) return 1 ;; esac
   case "$list" in *andrej-karpathy-skills@karpathy-skills*) ;; *) return 1 ;; esac
   case "$list" in *superpowers@claude-plugins-official*) ;; *) return 1 ;; esac
+  case "$list" in *last30days@last30days-skill*) ;; *) return 1 ;; esac
+  case "$list" in *typesafe@typesafe-ai*) ;; *) return 1 ;; esac
 }
 has_node() {   # context-mode's server runs on Node.js 22.5 or newer
   command -v node >/dev/null && node -e 'const [a,b]=process.versions.node.split(".").map(Number); process.exit(a>22||(a==22&&b>=5)?0:1)'
@@ -108,7 +110,9 @@ install_plugins() {   # one by one; a failed install is retried once with its er
   local p
   for p in mksglu/context-mode=context-mode@context-mode \
            forrestchang/andrej-karpathy-skills=andrej-karpathy-skills@karpathy-skills \
-           anthropics/claude-plugins-official=superpowers@claude-plugins-official; do
+           anthropics/claude-plugins-official=superpowers@claude-plugins-official \
+           mvanhorn/last30days-skill=last30days@last30days-skill \
+           typesafe-ai/skills=typesafe@typesafe-ai; do
     claude plugin list 2>/dev/null | grep -q "${p#*=}" && continue
     claude plugin marketplace add "${p%%=*}" >/dev/null 2>&1 || claude plugin marketplace add "${p%%=*}" || true
     claude plugin install "${p#*=}" >/dev/null 2>&1 || claude plugin install "${p#*=}" || true
