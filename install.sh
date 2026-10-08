@@ -107,6 +107,7 @@ download_node() {   # Node.js LTS into ~/.local/node, linked into ~/.local/bin
   tar -xzf "$tmp/node.tar.gz" -C "$HOME/.local/node" --strip-components=1
   rm -rf "$tmp"
   ln -sf "$HOME/.local/node/bin/node" "$HOME/.local/node/bin/npm" "$HOME/.local/node/bin/npx" "$BIN/"
+  hash -r   # bash may still remember an older system node (Ubuntu's 18 comes with the browser packages)
 }
 
 install_plugins() {   # one by one; a failed install is retried once with its error message shown
@@ -241,7 +242,7 @@ main() {
     has_browser || fail "The browser did not install."
   fi
   STEP="installing Node.js"
-  has_node || download_node || true   # a failed download is caught by the next line
+  has_node || download_node
   has_node || fail "Node.js did not install."
   STEP="installing Claude Code plugins"
   has_plugins || install_plugins
