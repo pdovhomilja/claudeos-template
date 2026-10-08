@@ -90,6 +90,30 @@ has_plugins() {
   case "$list" in *andrej-karpathy-skills@karpathy-skills*) ;; *) return 1 ;; esac
   case "$list" in *superpowers@claude-plugins-official*) ;; *) return 1 ;; esac
 }
+has_node() {   # context-mode's server runs on Node.js 22.5 or newer
+  command -v node >/dev/null && node -e 'const [a,b]=process.versions.node.split(".").map(Number); process.exit(a>22||(a==22&&b>=5)?0:1)'
+}
+
+download_node() {   # Node.js LTS into ~/.local/node, linked into ~/.local/bin
+  local f os arch=x64 url=https://nodejs.org/dist/latest-v24.x
+  [ "$ARCH" = arm64 ] && arch=arm64
+  if [ "$OS" = Darwin ]; then os=darwin; else os=linux; fi
+  f=$(curl -fsSL "$url/SHASUMS256.txt" | grep -o "node-v[0-9.]*-$os-$arch\.tar\.gz" | head -1)
+  rm -rf "$HOME/.local/node"; mkdir -p "$HOME/.local/node"
+  curl -fsSL "$url/$f" | tar -xz -C "$HOME/.local/node" --strip-components=1
+  ln -sf "$HOME/.local/node/bin/node" "$HOME/.local/node/bin/npm" "$HOME/.local/node/bin/npx" "$BIN/"
+}
+
+install_plugins() {   # one by one; a failed install is retried once with its error message shown
+  local p
+  for p in mksglu/context-mode=context-mode@context-mode \
+           forrestchang/andrej-karpathy-skills=andrej-karpathy-skills@karpathy-skills \
+           anthropics/claude-plugins-official=superpowers@claude-plugins-official; do
+    claude plugin list 2>/dev/null | grep -q "${p#*=}" && continue
+    claude plugin marketplace add "${p%%=*}" >/dev/null 2>&1 || claude plugin marketplace add "${p%%=*}" || true
+    claude plugin install "${p#*=}" >/dev/null 2>&1 || claude plugin install "${p#*=}" || true
+  done
+}
 
 row() {   # $1 = yes|no|later|skip, $2 = what, $3 = note; counts what is missing (no) in MISSING
   local mark
@@ -113,6 +137,7 @@ preflight() {
   check "Claude Code" "command -v claude"
   check "uv" "command -v uv"
   check "graphify" "command -v graphify"
+  check "Node.js" has_node
   check "Claude Code plugins" has_plugins
   if [ "$SERVER" = 1 ]; then
     check "Tailscale" "command -v tailscale"
@@ -202,14 +227,12 @@ main() {
     install_browser
     has_browser || fail "The browser did not install."
   fi
+  STEP="installing Node.js"
+  has_node || download_node
+  has_node || fail "Node.js did not install."
   STEP="installing Claude Code plugins"
-  has_plugins || { claude plugin marketplace add mksglu/context-mode
-    claude plugin install context-mode@context-mode
-    claude plugin marketplace add forrestchang/andrej-karpathy-skills
-    claude plugin install andrej-karpathy-skills@karpathy-skills
-    claude plugin marketplace add anthropics/claude-plugins-official
-    claude plugin install superpowers@claude-plugins-official; } >/dev/null 2>&1 \
-    || info "(some plugins will be installed during the first-time setup instead)"
+  has_plugins || install_plugins
+  has_plugins || fail "Claude Code plugins did not install (see the messages above)."
   if [ "$OS" = Darwin ] && [ "$SERVER" = 0 ] && ! has_obsidian; then
     STEP="installing Obsidian"
     install_obsidian 2>/dev/null || info "(Obsidian skipped; you can download it later from obsidian.md)"
