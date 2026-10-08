@@ -18,11 +18,11 @@ You need a **Claude Pro or Max** subscription and a free **GitHub** account (you
    ```
    1/7 What is already on this computer
       ✓  Apple developer tools    installed
+      ○  Node.js                  will be installed
       ○  GitHub tool (gh)         will be installed
       ✓  Claude Code              installed
       ○  uv                       will be installed
       ○  graphify                 will be installed
-      ○  Node.js                  will be installed
       ○  Claude Code plugins      will be installed
       –  Tailscale                not needed on a laptop
       ✓  Obsidian                 installed

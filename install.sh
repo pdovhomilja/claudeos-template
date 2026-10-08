@@ -97,13 +97,17 @@ has_node() {   # context-mode's server runs on Node.js 22.5 or newer
 }
 
 download_node() {   # Node.js LTS into ~/.local/node, linked into ~/.local/bin
-  local f os arch=x64 url=https://nodejs.org/dist/latest-v24.x
+  local f tmp os arch=x64 url=https://nodejs.org/dist/latest-v24.x
   [ "$ARCH" = arm64 ] && arch=arm64
   if [ "$OS" = Darwin ]; then os=darwin; else os=linux; fi
   f=$(curl -fsSL "$url/SHASUMS256.txt" | grep -o "node-v[0-9.]*-$os-$arch\.tar\.gz" | head -1)
+  tmp=$(mktemp -d)
+  curl -fsSL -o "$tmp/node.tar.gz" "$url/$f"
   rm -rf "$HOME/.local/node"; mkdir -p "$HOME/.local/node"
-  curl -fsSL "$url/$f" | tar -xz -C "$HOME/.local/node" --strip-components=1
+  tar -xzf "$tmp/node.tar.gz" -C "$HOME/.local/node" --strip-components=1
+  rm -rf "$tmp"
   ln -sf "$HOME/.local/node/bin/node" "$HOME/.local/node/bin/npm" "$HOME/.local/node/bin/npx" "$BIN/"
+  hash -r   # bash may still remember an older system node from the checklist
 }
 
 install_plugins() {   # one by one; a failed install is retried once with its error message shown
@@ -137,11 +141,11 @@ check() {   # $1 = what, $2 = command that succeeds when it is there
 preflight() {
   MISSING=0
   if [ "$OS" = Darwin ]; then check "Apple developer tools" has_git; else check "Git" has_git; fi
+  check "Node.js" has_node
   check "GitHub tool (gh)" "command -v gh"
   check "Claude Code" "command -v claude"
   check "uv" "command -v uv"
   check "graphify" "command -v graphify"
-  check "Node.js" has_node
   check "Claude Code plugins" has_plugins
   if [ "$SERVER" = 1 ]; then
     check "Tailscale" "command -v tailscale"
@@ -201,6 +205,12 @@ main() {
       [ "$n" -lt 180 ] || fail "Apple's developer tools did not finish within an hour."
     done
   fi
+  STEP="turning off Ubuntu's restart questions"
+  if [ "$OS" = Linux ] && [ -d /etc/needrestart/conf.d ] && [ ! -f /etc/needrestart/conf.d/claudeos.conf ]; then
+    # needrestart would open a dialog inside apt (also in Tailscale's installer) that is hidden and cannot be answered
+    printf '$nrconf{restart} = "a";\n$nrconf{kernelhints} = 0;\n$nrconf{ucodehint} = 0;\n' \
+      | sudo tee /etc/needrestart/conf.d/claudeos.conf >/dev/null
+  fi
   STEP="installing git"
   if [ "$OS" = Linux ] && ! command -v git >/dev/null; then
     command -v apt-get >/dev/null || fail "Please install 'git' with your system's package manager first."
@@ -212,6 +222,9 @@ main() {
 
   say "3/7 Assistant software"
   add_path_to_profile
+  STEP="installing Node.js"
+  has_node || download_node
+  has_node || fail "Node.js did not install."
   STEP="installing the GitHub tool"
   command -v gh >/dev/null || download_gh
   STEP="installing Claude Code"
@@ -231,9 +244,6 @@ main() {
     install_browser
     has_browser || fail "The browser did not install."
   fi
-  STEP="installing Node.js"
-  has_node || download_node
-  has_node || fail "Node.js did not install."
   STEP="installing Claude Code plugins"
   has_plugins || install_plugins
   has_plugins || fail "Claude Code plugins did not install (see the messages above)."
