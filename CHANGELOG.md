@@ -1,0 +1,14 @@
+# Changelog
+
+What changed in each version of claudeOS, in plain words. Your assistant reads this when it updates itself.
+A line starting with **After updating:** is something the assistant does once after the update.
+
+Releasing (template maintainers): every merge to `main` is a release. Bump `VERSION`, add a section at the top
+(`## X.Y.Z — YYYY-MM-DD`), merge, then tag `main` as `vX.Y.Z` and push the tag.
+
+## 1.0.0 — 2026-10-08
+
+- Versions and updates: say "update yourself" and the assistant brings in the newest version. Your wiki, sources, drafts, settings and your own edits to its files are kept.
+- The installer installs Node.js first and all five plugins (context-mode, superpowers, karpathy skills, last30days, typesafe), and stops if one is missing.
+- Server install no longer hangs on Ubuntu's hidden "newer kernel" dialog and no longer stops silently at the deploy key.
+- **After updating:** run the installer once more (it only adds what is missing): `curl -fsSL https://raw.githubusercontent.com/pdovhomilja/claudeos-template/main/install.sh | bash` (add `-s -- --server` on a server).

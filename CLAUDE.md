@@ -12,7 +12,7 @@ If the file `.claudeos-setup-done` does **not** exist in this folder, the setup 
 2. **Claude Code plugins.** Run `claude plugin list`. Install whatever is missing yourself with Bash (`claude plugin marketplace add <repo>`, then `claude plugin install <plugin>`): `context-mode@context-mode` (marketplace `mksglu/context-mode`), `andrej-karpathy-skills@karpathy-skills` (`forrestchang/andrej-karpathy-skills`), `superpowers@claude-plugins-official` (`anthropics/claude-plugins-official`), `last30days@last30days-skill` (`mvanhorn/last30days-skill`), `typesafe@typesafe-ai` (`typesafe-ai/skills`). Plugins you installed now are active from the next start.
 3. **Project skills** are already in `.claude/skills/` (committed with this repo): `graphify`, `humanizer`, `obsidian-markdown`, `obsidian-bases`, and the marketing pack from `coreyhaines31/marketingskills` (tracked in `skills-lock.json`). Nothing to install; mention that unused skill folders can simply be deleted.
 4. **Hooks.** `.claude/settings.json` already wires graphify's read/search guards. Verify `graphify hook-guard search` runs without error; if `graphify` is not on PATH the hooks fail silently, so fix PATH first.
-5. **Personalise.** Ask, one question at a time: the user's first name; what to call the assistant (suggest "Jarvis"); preferred language(s); what they do (student, job, business, hobbies) in a few sentences. Then replace every `{{USER_NAME}}`, `{{ASSISTANT_NAME}}` and `{{DATE}}` in every file that has them (`grep -rlE '\{\{(USER_NAME|ASSISTANT_NAME|DATE)\}\}' --exclude-dir=.git .`), and write what they told you into `wiki/overview.md` and `wiki/log.md` (first entry: `## [YYYY-MM-DD] note — Setup`). Adjust the language line in `SOUL.md`. Last question: up to three goals for the next months (outcome + date); write them into `wiki/goals.md`.
+5. **Personalise.** Ask, one question at a time: the user's first name; what to call the assistant (suggest "Jarvis"); preferred language(s); what they do (student, job, business, hobbies) in a few sentences. Then replace every `{{USER_NAME}}`, `{{ASSISTANT_NAME}}` and `{{DATE}}` in every file that has them (`grep -rlE '\{\{(USER_NAME|ASSISTANT_NAME|DATE)\}\}' --exclude-dir=.git .`), and write what they told you into `wiki/overview.md` and `wiki/log.md` (first entry: `## [YYYY-MM-DD] note — Setup`). Write the same three values into `.claudeos/profile` (lines `USER_NAME=…`, `ASSISTANT_NAME=…`, `DATE=YYYY-MM-DD`); updates need them. Adjust the language line in `SOUL.md`. Last question: up to three goals for the next months (outcome + date); write them into `wiki/goals.md`.
 6. **Knowledge graph.** Run `graphify .` once to create `graphify-out/` (it will be small; that is fine).
 7. **Finish.** Create `.claudeos-setup-done` (content: the date), delete this "First run" section from `CLAUDE.md`, and commit everything: `git add -A && git commit -m "claudeos: initial setup"` (and push, if the repo has a remote). Tell the user the setup is complete and, in plain words: (a) to come back later, open Terminal and type `claudeos`; (b) to read the assistant's memory, open Obsidian → "Open folder as vault" → the `claudeos` folder in their home folder; (c) to teach it something, drop a file into the `raw` folder and say "ingest", or just tell it.
 
@@ -56,6 +56,7 @@ Project skills live in `.claude/skills/` (marketing pack from coreyhaines31/mark
 - **Outbound text** (emails, posts, applications, anything {{USER_NAME}} will send or publish): run `humanizer` as the final pass before presenting it.
 - **Marketing tasks:** the marketing skills read `.agents/product-marketing.md`. Create it with the `product-marketing` skill the first time it is needed (plain file, no symlink — must work on Windows).
 - **Daily rhythm:** `/morning`, `/eod`, `/friday` (built on `wiki/tasks.md` and `wiki/goals.md`); `/grill-me` to get what is in {{USER_NAME}}'s head onto disk; `/handoff` to pass a session on.
+- **Updates:** "update yourself" (skill `update`) brings in the newest claudeOS version; data and the user's own edits are kept.
 - **superpowers brainstorming:** wiki, communication, research, and planning tasks are "bounded" by default — short design in chat, no spec/plan documents unless {{USER_NAME}} asks. Reserve the architectural path for code or multi-week initiatives.
 
 ## Files in this folder
@@ -69,6 +70,7 @@ Project skills live in `.claude/skills/` (marketing pack from coreyhaines31/mark
 - `staging/` — drafts waiting for {{USER_NAME}}'s approval
 - `scripts/` — `send-mail.py`, the twin (`scripts/twin/`), server setup (`scripts/vm/`)
 - `.env` — secrets for the twin (never committed; template in `.env.example`)
+- `VERSION`, `CHANGELOG.md` — claudeOS version and what changed; `.claudeos/profile` — the names used by updates (`scripts/update.py`)
 - `graphify-out/` — knowledge graph (graph.json, GRAPH_REPORT.md, graph.html); `.graphifyignore` scopes it
 
 ## graphify
