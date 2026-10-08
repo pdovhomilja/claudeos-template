@@ -22,12 +22,13 @@ You need a **Claude Pro or Max** subscription and a free **GitHub** account (you
       ✓  Claude Code              installed
       ○  uv                       will be installed
       ○  graphify                 will be installed
+      ○  Node.js                  will be installed
       ○  Claude Code plugins      will be installed
       –  Tailscale                not needed on a laptop
       ✓  Obsidian                 installed
       ○  GitHub login             you will log in (step 4)
 
-      Press Enter to install what is missing (4).
+      Press Enter to install what is missing (5).
    ```
 
    ✓ is already there, ○ will be done now, – is not needed on this kind of machine. Only what is missing gets installed.
