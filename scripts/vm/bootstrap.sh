@@ -20,7 +20,7 @@ KEY="$HOME/.ssh/claudeos_deploy"
 if [ ! -f "$KEY" ]; then
   mkdir -p ~/.ssh && ssh-keygen -q -t ed25519 -N "" -C "claudeos twin $(hostname)" -f "$KEY"
   printf 'Host github.com\n  IdentityFile %s\n  IdentitiesOnly yes\n' "$KEY" >> ~/.ssh/config
-  ssh-keyscan -q github.com >> ~/.ssh/known_hosts 2>/dev/null
+  ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null   # no -q: OpenSSH 9.6 (Ubuntu 24.04) rejects it
 fi
 if [ ! -d "$DIR/.git" ]; then
   if ! git clone -q "$REPO" "$DIR" 2>/dev/null; then
