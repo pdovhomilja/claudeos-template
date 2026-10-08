@@ -7,6 +7,8 @@ description: Update this claudeOS to the newest template version without losing 
 
 `scripts/update.py` does the mechanics: it never changes `wiki/`, `raw/`, `staging/`, `.obsidian/` or files the template does not have, and merges every other template file three ways so the user's own edits stay. The whole update is one commit.
 
+Copies made before 1.0.0 have neither this skill nor `scripts/update.py`: run the script straight from the template instead, `curl -fsSL https://raw.githubusercontent.com/pdovhomilja/claudeos-template/main/scripts/update.py | python3 - --check` (and the same without `--check` in step 4); the update brings both in.
+
 1. **Clean start.** `git pull` (if there is a remote). Commit anything uncommitted with a normal message first.
 2. **What is new.** `python3 scripts/update.py --check`. "Up to date" → say so and stop. Otherwise tell the user in their language, in a few plain sentences, what the new version brings (from the printed changelog), and ask whether to update now.
 3. **Profile.** If `.claudeos/profile` does not exist (copies set up before 1.0.0), create it:

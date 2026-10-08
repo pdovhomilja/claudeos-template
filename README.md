@@ -76,6 +76,8 @@ Log in to websites in that Chrome yourself (through `/vnc.html`); the assistant 
 
 Tell your assistant **"update yourself"**. It checks what is new (`CHANGELOG.md`), asks you, and brings in the newest version as one commit. Your wiki, sources, drafts, Obsidian settings and your own edits to its files are kept; where your edit and the new version touch the same lines, it asks you. To undo, tell it to undo the update. A twin on a server mentions a new version in its Friday brief but never updates by itself.
 
+Copies made before version 1.0.0 do not have the updater yet. Tell the assistant once: *update yourself, following https://github.com/pdovhomilja/claudeos-template/blob/main/.claude/skills/update/SKILL.md*.
+
 ## Layout
 
 - `CLAUDE.md` — entry point / instructions (including first-run setup)
