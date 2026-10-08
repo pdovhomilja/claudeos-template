@@ -76,7 +76,8 @@ install_browser() {   # server only: Chrome inside a remote desktop you open ove
   curl -fsSL -o "$tmp/chrome.deb" https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
   chmod 644 "$tmp/chrome.deb"
   sudo apt-get update -qq </dev/tty >/dev/null
-  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq tigervnc-standalone-server tigervnc-tools openbox novnc websockify \
+  # NEEDRESTART_SUSPEND: otherwise a "newer kernel available" dialog hangs the install, invisible and unanswerable
+  sudo NEEDRESTART_SUSPEND=1 DEBIAN_FRONTEND=noninteractive apt-get install -y -qq tigervnc-standalone-server tigervnc-tools openbox novnc websockify \
     dbus-x11 fonts-liberation fonts-noto-color-emoji xfonts-base "$tmp/chrome.deb" </dev/tty >/dev/null 2>&1
   rm -rf "$tmp"
 }
@@ -97,12 +98,15 @@ has_node() {   # context-mode's server runs on Node.js 22.5 or newer
 }
 
 download_node() {   # Node.js LTS into ~/.local/node, linked into ~/.local/bin
-  local f os arch=x64 url=https://nodejs.org/dist/latest-v24.x
+  local f tmp os arch=x64 url=https://nodejs.org/dist/latest-v24.x
   [ "$ARCH" = arm64 ] && arch=arm64
   if [ "$OS" = Darwin ]; then os=darwin; else os=linux; fi
   f=$(curl -fsSL "$url/SHASUMS256.txt" | grep -o "node-v[0-9.]*-$os-$arch\.tar\.gz" | head -1)
+  tmp=$(mktemp -d)
+  curl -fsSL -o "$tmp/node.tar.gz" "$url/$f"
   rm -rf "$HOME/.local/node"; mkdir -p "$HOME/.local/node"
-  curl -fsSL "$url/$f" | tar -xz -C "$HOME/.local/node" --strip-components=1
+  tar -xzf "$tmp/node.tar.gz" -C "$HOME/.local/node" --strip-components=1
+  rm -rf "$tmp"
   ln -sf "$HOME/.local/node/bin/node" "$HOME/.local/node/bin/npm" "$HOME/.local/node/bin/npx" "$BIN/"
 }
 
@@ -206,7 +210,7 @@ main() {
     command -v apt-get >/dev/null || fail "Please install 'git' with your system's package manager first."
     info "Your computer password may be asked for now (typing it shows nothing; that is normal)."
     info "Installing git, please wait…"
-    sudo apt-get update -qq </dev/tty >/dev/null && sudo apt-get install -y -qq git ca-certificates </dev/tty >/dev/null 2>&1
+    sudo apt-get update -qq </dev/tty >/dev/null && sudo NEEDRESTART_SUSPEND=1 DEBIAN_FRONTEND=noninteractive apt-get install -y -qq git ca-certificates </dev/tty >/dev/null 2>&1
   fi
   info "ok"
 
@@ -232,7 +236,7 @@ main() {
     has_browser || fail "The browser did not install."
   fi
   STEP="installing Node.js"
-  has_node || download_node
+  has_node || download_node || true   # a failed download is caught by the next line
   has_node || fail "Node.js did not install."
   STEP="installing Claude Code plugins"
   has_plugins || install_plugins
