@@ -9,7 +9,7 @@ export PATH="$HOME/.local/bin:$PATH"
 
 echo "== packages"
 sudo apt-get update -qq
-sudo NEEDRESTART_SUSPEND=1 DEBIAN_FRONTEND=noninteractive apt-get install -y -qq git python3 curl unattended-upgrades
+sudo apt-get install -y -qq git python3 curl unattended-upgrades
 command -v tailscale >/dev/null || curl -fsSL https://tailscale.com/install.sh | sh
 command -v claude >/dev/null || curl -fsSL https://claude.ai/install.sh | bash
 command -v uv >/dev/null || curl -LsSf https://astral.sh/uv/install.sh | sh

@@ -76,8 +76,7 @@ install_browser() {   # server only: Chrome inside a remote desktop you open ove
   curl -fsSL -o "$tmp/chrome.deb" https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
   chmod 644 "$tmp/chrome.deb"
   sudo apt-get update -qq </dev/tty >/dev/null
-  # NEEDRESTART_SUSPEND: otherwise a "newer kernel available" dialog hangs the install, invisible and unanswerable
-  sudo NEEDRESTART_SUSPEND=1 DEBIAN_FRONTEND=noninteractive apt-get install -y -qq tigervnc-standalone-server tigervnc-tools openbox novnc websockify \
+  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq tigervnc-standalone-server tigervnc-tools openbox novnc websockify \
     dbus-x11 fonts-liberation fonts-noto-color-emoji xfonts-base "$tmp/chrome.deb" </dev/tty >/dev/null 2>&1
   rm -rf "$tmp"
 }
@@ -205,12 +204,18 @@ main() {
       [ "$n" -lt 180 ] || fail "Apple's developer tools did not finish within an hour."
     done
   fi
+  STEP="turning off Ubuntu's restart questions"
+  if [ "$OS" = Linux ] && [ -d /etc/needrestart/conf.d ] && [ ! -f /etc/needrestart/conf.d/claudeos.conf ]; then
+    # needrestart would open a dialog inside apt (also in Tailscale's installer) that is hidden and cannot be answered
+    printf '$nrconf{restart} = "a";\n$nrconf{kernelhints} = 0;\n$nrconf{ucodehint} = 0;\n' \
+      | sudo tee /etc/needrestart/conf.d/claudeos.conf >/dev/null
+  fi
   STEP="installing git"
   if [ "$OS" = Linux ] && ! command -v git >/dev/null; then
     command -v apt-get >/dev/null || fail "Please install 'git' with your system's package manager first."
     info "Your computer password may be asked for now (typing it shows nothing; that is normal)."
     info "Installing git, please wait…"
-    sudo apt-get update -qq </dev/tty >/dev/null && sudo NEEDRESTART_SUSPEND=1 DEBIAN_FRONTEND=noninteractive apt-get install -y -qq git ca-certificates </dev/tty >/dev/null 2>&1
+    sudo apt-get update -qq </dev/tty >/dev/null && sudo apt-get install -y -qq git ca-certificates </dev/tty >/dev/null 2>&1
   fi
   info "ok"
 
