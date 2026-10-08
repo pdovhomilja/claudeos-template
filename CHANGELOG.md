@@ -6,6 +6,11 @@ A line starting with **After updating:** is something the assistant does once af
 Releasing (template maintainers): every merge to `main` is a release. Bump `VERSION`, add a section at the top
 (`## X.Y.Z — YYYY-MM-DD`), merge, then tag `main` as `vX.Y.Z` and push the tag.
 
+## 1.0.1 — 2026-10-08
+
+- Mail drafts can carry files: put `attach: path, path` in the draft and the file goes out with the mail when you approve it.
+- When a mail asks for something one of your skills handles (say, a monthly file to clean up), the twin now follows that skill, saves the attachments next to the mail and attaches its result to the reply draft. Recurring mail jobs become a skill of your own; the system files stay the same.
+
 ## 1.0.0 — 2026-10-08
 
 - Versions and updates: say "update yourself" and the assistant brings in the newest version. Your wiki, sources, drafts, settings and your own edits to its files are kept.
