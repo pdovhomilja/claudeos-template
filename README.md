@@ -72,6 +72,10 @@ The server has its own Google Chrome inside a small desktop, so the assistant ca
 
 Log in to websites in that Chrome yourself (through `/vnc.html`); the assistant then uses those logins. If the page stays black or says disconnected: `systemctl --user restart claudeos-desktop claudeos-novnc` on the server. Chrome for Linux exists only for x86_64, so ARM servers get no browser.
 
+## Updating
+
+Tell your assistant **"update yourself"**. It checks what is new (`CHANGELOG.md`), asks you, and brings in the newest version as one commit. Your wiki, sources, drafts, Obsidian settings and your own edits to its files are kept; where your edit and the new version touch the same lines, it asks you. To undo, tell it to undo the update. A twin on a server mentions a new version in its Friday brief but never updates by itself.
+
 ## Layout
 
 - `CLAUDE.md` — entry point / instructions (including first-run setup)

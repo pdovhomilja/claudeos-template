@@ -287,7 +287,7 @@ main() {
   say "5/7 Your private copy"
   STEP="creating your private copy on GitHub"
   if [ -d "$DIR/.git" ] && is_claudeos_repo "$(git -C "$DIR" remote get-url origin 2>/dev/null | sed -E 's#^(https://github.com/|git@github.com:)##; s#\.git$##')"; then
-    info "Found $DIR, keeping it."
+    info "Found $DIR, keeping it. (To get a newer claudeOS version, tell your assistant: update yourself.)"
   else
     if [ -e "$DIR" ]; then
       mv "$DIR" "$DIR.old-$(date +%Y%m%d-%H%M%S)"
