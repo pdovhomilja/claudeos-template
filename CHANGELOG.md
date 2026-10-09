@@ -9,6 +9,7 @@ Releasing (template maintainers): every merge to `main` is a release. Bump `VERS
 ## 1.0.2 — 2026-10-09
 
 - The command to open your assistant is now `jarvis` (was `claudeos`). The folder stays `~/claudeos`.
+- The installer opens with a welcome screen: what claudeOS is, what it will do, and the version it installs.
 - On a Mac the installer no longer crashes at the last step with "EINVAL: invalid argument, kqueue" when it starts Claude Code.
 - **After updating:** run the installer once more so the `jarvis` command exists: `curl -fsSL https://raw.githubusercontent.com/pdovhomilja/claudeos-template/main/install.sh | bash`. The old `claudeos` command keeps working until you delete it.
 

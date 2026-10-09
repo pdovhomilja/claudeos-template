@@ -177,12 +177,25 @@ main() {
   mkdir -p "$BIN"
   export PATH="$BIN:$PATH"
 
-  say "claudeOS — your own AI assistant"
+  VERSION=$(curl -fsSL "https://raw.githubusercontent.com/$TEMPLATE/main/VERSION" 2>/dev/null) || VERSION="?"
+  printf '\n\033[1m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m\n'
+  printf '\033[1m   claudeOS %s\033[0m   your own AI assistant\n' "$VERSION"
+  printf '\033[1m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m\n'
+  info "An assistant that runs on Claude Code and remembers what you teach it."
+  info "Its memory is a private wiki on your own GitHub account; nothing is shared."
+  info ""
+  info "What this installer does:"
+  info "  • installs the tools it needs, mostly into your home folder"
+  info "  • makes your private copy of claudeOS on GitHub and puts it in $DIR"
+  info "  • adds the command  jarvis  and starts the assistant's first-time setup"
+  [ -f "$DIR/VERSION" ] && info "Already installed here: version $(cat "$DIR/VERSION"). It keeps your data and adds what is missing."
+  info ""
   info "This takes about 10–15 minutes. You need:"
   info "  • a Claude Pro or Max subscription (claude.ai)"
   info "  • a free GitHub account (you can create one when the browser opens)"
   [ "$OS" = Darwin ] && info "  • maybe your Mac password, once"
   info "You can stop at any time by closing this window, and continue later by pasting the command again."
+  wait_enter "Press Enter to start."
 
   say "1/7 What is already on this computer"
   STEP="checking what is installed"
