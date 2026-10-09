@@ -6,6 +6,11 @@ A line starting with **After updating:** is something the assistant does once af
 Releasing (template maintainers): every merge to `main` is a release. Bump `VERSION`, add a section at the top
 (`## X.Y.Z — YYYY-MM-DD`), merge, then tag `main` as `vX.Y.Z` and push the tag.
 
+## 1.0.4 — 2026-10-09
+
+- New `/done`: closes a session. Saves what was learned to the wiki and memory, notes what is unfinished, cleans up, commits and pushes, then tells you to type /exit.
+- New `/audit`: a health check of your assistant. It scores what it knows about you, which of your tools it can actually reach, which routines really work and what runs without you (Four Cs, 100 points), and saves a dated report in `audits/` that the next audit compares against.
+
 ## 1.0.3 — 2026-10-09
 
 - The installer says what it did with Obsidian on a Mac: "already installed", "installed", or why the download did not work (it used to skip silently).
