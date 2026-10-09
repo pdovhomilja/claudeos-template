@@ -177,12 +177,25 @@ main() {
   mkdir -p "$BIN"
   export PATH="$BIN:$PATH"
 
-  say "claudeOS — your own AI assistant"
+  VERSION=$(curl -fsSL "https://raw.githubusercontent.com/$TEMPLATE/main/VERSION" 2>/dev/null) || VERSION="?"
+  printf '\n\033[1m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m\n'
+  printf '\033[1m   claudeOS %s\033[0m   your own AI assistant\n' "$VERSION"
+  printf '\033[1m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m\n'
+  info "An assistant that runs on Claude Code and remembers what you teach it."
+  info "Its memory is a private wiki on your own GitHub account; nothing is shared."
+  info ""
+  info "What this installer does:"
+  info "  • installs the tools it needs, mostly into your home folder"
+  info "  • makes your private copy of claudeOS on GitHub and puts it in $DIR"
+  info "  • adds the command  jarvis  and starts the assistant's first-time setup"
+  [ -f "$DIR/VERSION" ] && info "Already installed here: version $(cat "$DIR/VERSION"). It keeps your data and adds what is missing."
+  info ""
   info "This takes about 10–15 minutes. You need:"
   info "  • a Claude Pro or Max subscription (claude.ai)"
   info "  • a free GitHub account (you can create one when the browser opens)"
   [ "$OS" = Darwin ] && info "  • maybe your Mac password, once"
   info "You can stop at any time by closing this window, and continue later by pasting the command again."
+  wait_enter "Press Enter to start."
 
   say "1/7 What is already on this computer"
   STEP="checking what is installed"
@@ -308,10 +321,10 @@ main() {
   fi
 
   say "6/7 Shortcut"
-  STEP="creating the claudeos command"
-  printf '#!/bin/bash\ncd "$HOME/claudeos" && exec claude "$@"\n' > "$BIN/claudeos"
-  chmod +x "$BIN/claudeos"
-  info "ok: from now on, open Terminal and type  claudeos  then Enter."
+  STEP="creating the jarvis command"
+  printf '#!/bin/bash\ncd "$HOME/claudeos" && exec claude "$@"\n' > "$BIN/jarvis"
+  chmod +x "$BIN/jarvis"
+  info "ok: from now on, open Terminal and type  jarvis  then Enter."
 
   if [ "$SERVER" = 1 ]; then
     say "7/7 Server twin"
@@ -323,18 +336,20 @@ main() {
 
   say "7/7 Meet your assistant"
   trap - ERR
+  # macOS kqueue rejects the /dev/tty alias (Claude Code dies with EINVAL), so hand it the real device
+  TTY=$(ps -o tty= -p $$ | tr -d ' '); case "$TTY" in ""|"?"*) TTY=tty ;; esac
   if [ -f "$DIR/.claudeos-setup-done" ]; then
     info "Everything is already set up. Starting your assistant."
-    cd "$DIR" && exec claude </dev/tty
+    cd "$DIR" && exec claude </dev/$TTY
   fi
   info "Claude Code starts now. What you will see:"
   info "  1. A colour theme: press Enter."
   info "  2. Login: choose your Claude account (subscription); the browser opens; click Authorize."
   info "  3. \"Do you trust the files in this folder?\": choose Yes."
   info "  4. Your assistant introduces itself and asks a few questions. Just answer in your own words."
-  info "To leave later, type /exit. To come back: open Terminal and type  claudeos"
+  info "To leave later, type /exit. To come back: open Terminal and type  jarvis"
   wait_enter
-  cd "$DIR" && exec claude "run the first-time setup" </dev/tty
+  cd "$DIR" && exec claude "run the first-time setup" </dev/$TTY
 }
 
 main "$@"

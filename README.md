@@ -33,7 +33,7 @@ You need a **Claude Pro or Max** subscription and a free **GitHub** account (you
 
    ✓ is already there, ○ will be done now, – is not needed on this kind of machine. Only what is missing gets installed.
 4. Follow what it says on screen. It connects GitHub in your browser (check that it shows **your own** account), makes **your own private copy** of this template (only you can see it), and starts your assistant, which asks you a few questions.
-5. Next time: open Terminal and type `claudeos`.
+5. Next time: open Terminal and type `jarvis`.
 
 If anything stops, paste the same line again: it continues where it stopped. Nothing is installed outside your home folder except Apple's developer tools and Obsidian on a Mac, git on Linux, and Tailscale on a server.
 
