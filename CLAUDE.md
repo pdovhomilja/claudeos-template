@@ -55,7 +55,8 @@ Project skills live in `.claude/skills/` (marketing pack from coreyhaines31/mark
 
 - **Outbound text** (emails, posts, applications, anything {{USER_NAME}} will send or publish): run `humanizer` as the final pass before presenting it.
 - **Marketing tasks:** the marketing skills read `.agents/product-marketing.md`. Create it with the `product-marketing` skill the first time it is needed (plain file, no symlink — must work on Windows).
-- **Daily rhythm:** `/morning`, `/eod`, `/friday` (built on `wiki/tasks.md` and `wiki/goals.md`); `/grill-me` to get what is in {{USER_NAME}}'s head onto disk; `/handoff` to pass a session on.
+- **Daily rhythm:** `/morning`, `/eod`, `/friday` (built on `wiki/tasks.md` and `wiki/goals.md`); `/grill-me` to get what is in {{USER_NAME}}'s head onto disk; `/handoff` to pass a session on; `/done` to close a session (save, clean up, commit, push).
+- **Health check:** `/audit` scores the system (Four Cs) and saves a dated report in `audits/`; weekly during setup.
 - **Updates:** "update yourself" (skill `update`) brings in the newest claudeOS version; data and the user's own edits are kept.
 - **superpowers brainstorming:** wiki, communication, research, and planning tasks are "bounded" by default — short design in chat, no spec/plan documents unless {{USER_NAME}} asks. Reserve the architectural path for code or multi-week initiatives.
 
@@ -72,6 +73,7 @@ Project skills live in `.claude/skills/` (marketing pack from coreyhaines31/mark
 - `.env` — secrets for the twin (never committed; template in `.env.example`)
 - `VERSION`, `CHANGELOG.md` — claudeOS version and what changed; `.claudeos/profile` — the names used by updates (`scripts/update.py`)
 - `graphify-out/` — knowledge graph (graph.json, GRAPH_REPORT.md, graph.html); `.graphifyignore` scopes it
+- `audits/` — dated `/audit` reports (point-in-time evidence, not facts)
 
 ## graphify
 
