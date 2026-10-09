@@ -6,6 +6,10 @@ A line starting with **After updating:** is something the assistant does once af
 Releasing (template maintainers): every merge to `main` is a release. Bump `VERSION`, add a section at the top
 (`## X.Y.Z — YYYY-MM-DD`), merge, then tag `main` as `vX.Y.Z` and push the tag.
 
+## 1.0.3 — 2026-10-09
+
+- The installer says what it did with Obsidian on a Mac: "already installed", "installed", or why the download did not work (it used to skip silently).
+
 ## 1.0.2 — 2026-10-09
 
 - The command to open your assistant is now `jarvis` (was `claudeos`). The folder stays `~/claudeos`.

@@ -260,9 +260,15 @@ main() {
   STEP="installing Claude Code plugins"
   has_plugins || install_plugins
   has_plugins || fail "Claude Code plugins did not install (see the messages above)."
-  if [ "$OS" = Darwin ] && [ "$SERVER" = 0 ] && ! has_obsidian; then
-    STEP="installing Obsidian"
-    install_obsidian 2>/dev/null || info "(Obsidian skipped; you can download it later from obsidian.md)"
+  if [ "$OS" = Darwin ] && [ "$SERVER" = 0 ]; then
+    if has_obsidian; then
+      info "Obsidian: already installed"
+    else
+      STEP="installing Obsidian"
+      info "Obsidian: installing..."
+      if install_obsidian; then info "Obsidian: installed"
+      else info "(Obsidian skipped: the download did not work, see the message above. You can get it later from obsidian.md)"; fi
+    fi
   fi
   info "ok"
 
