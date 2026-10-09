@@ -6,6 +6,12 @@ A line starting with **After updating:** is something the assistant does once af
 Releasing (template maintainers): every merge to `main` is a release. Bump `VERSION`, add a section at the top
 (`## X.Y.Z — YYYY-MM-DD`), merge, then tag `main` as `vX.Y.Z` and push the tag.
 
+## 1.0.2 — 2026-10-09
+
+- The command to open your assistant is now `jarvis` (was `claudeos`). The folder stays `~/claudeos`.
+- On a Mac the installer no longer crashes at the last step with "EINVAL: invalid argument, kqueue" when it starts Claude Code.
+- **After updating:** run the installer once more so the `jarvis` command exists: `curl -fsSL https://raw.githubusercontent.com/pdovhomilja/claudeos-template/main/install.sh | bash`. The old `claudeos` command keeps working until you delete it.
+
 ## 1.0.1 — 2026-10-08
 
 - Mail drafts can carry files: put `attach: path, path` in the draft and the file goes out with the mail when you approve it.

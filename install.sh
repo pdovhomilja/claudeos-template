@@ -308,10 +308,10 @@ main() {
   fi
 
   say "6/7 Shortcut"
-  STEP="creating the claudeos command"
-  printf '#!/bin/bash\ncd "$HOME/claudeos" && exec claude "$@"\n' > "$BIN/claudeos"
-  chmod +x "$BIN/claudeos"
-  info "ok: from now on, open Terminal and type  claudeos  then Enter."
+  STEP="creating the jarvis command"
+  printf '#!/bin/bash\ncd "$HOME/claudeos" && exec claude "$@"\n' > "$BIN/jarvis"
+  chmod +x "$BIN/jarvis"
+  info "ok: from now on, open Terminal and type  jarvis  then Enter."
 
   if [ "$SERVER" = 1 ]; then
     say "7/7 Server twin"
@@ -323,18 +323,20 @@ main() {
 
   say "7/7 Meet your assistant"
   trap - ERR
+  # macOS kqueue rejects the /dev/tty alias (Claude Code dies with EINVAL), so hand it the real device
+  TTY=$(ps -o tty= -p $$ | tr -d ' '); case "$TTY" in ""|"?"*) TTY=tty ;; esac
   if [ -f "$DIR/.claudeos-setup-done" ]; then
     info "Everything is already set up. Starting your assistant."
-    cd "$DIR" && exec claude </dev/tty
+    cd "$DIR" && exec claude </dev/$TTY
   fi
   info "Claude Code starts now. What you will see:"
   info "  1. A colour theme: press Enter."
   info "  2. Login: choose your Claude account (subscription); the browser opens; click Authorize."
   info "  3. \"Do you trust the files in this folder?\": choose Yes."
   info "  4. Your assistant introduces itself and asks a few questions. Just answer in your own words."
-  info "To leave later, type /exit. To come back: open Terminal and type  claudeos"
+  info "To leave later, type /exit. To come back: open Terminal and type  jarvis"
   wait_enter
-  cd "$DIR" && exec claude "run the first-time setup" </dev/tty
+  cd "$DIR" && exec claude "run the first-time setup" </dev/$TTY
 }
 
 main "$@"
