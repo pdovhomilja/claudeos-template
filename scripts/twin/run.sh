@@ -69,5 +69,9 @@ elif [ -f "$BRIEF" ]; then
 else
   python3 scripts/twin/discord.py post-text "Twin $MODE run $STAMP finished without a brief. Log: $LOG" >> "$LOG" 2>&1
 fi
+# Claude login (/login) runs out ~28 days after login and refreshing does not extend it; warn 5 days ahead.
+LOGIN_DAYS=$(python3 -c 'import json,os,time; o=json.load(open(os.path.expanduser("~/.claude/.credentials.json")))["claudeAiOauth"]; print(int((o["refreshTokenExpiresAt"]/1000-time.time())//86400))' 2>/dev/null)
+[ "$MODE" = night ] && [ -n "$LOGIN_DAYS" ] && [ "$LOGIN_DAYS" -lt 5 ] && python3 scripts/twin/discord.py post-text \
+  "Claude login on the server ($(hostname)) runs out in $LOGIN_DAYS days. In a terminal: ssh into it, run claude, then /login." >> "$LOG" 2>&1
 [ -n "$IMPROVE" ] && [ -f "$IMPROVE" ] && python3 scripts/twin/discord.py post "$IMPROVE" >> "$LOG" 2>&1
 exit 0
