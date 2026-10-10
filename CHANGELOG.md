@@ -6,6 +6,10 @@ A line starting with **After updating:** is something the assistant does once af
 Releasing (template maintainers): every merge to `main` is a release. Bump `VERSION`, add a section at the top
 (`## X.Y.Z — YYYY-MM-DD`), merge, then tag `main` as `vX.Y.Z` and push the tag.
 
+## 1.0.5 — 2026-10-10
+
+- The twin warns you in Discord when its Claude login on the server has fewer than 5 days left (a `/login` lasts about 28 days). The warning comes with the morning run and tells you what to do: ssh in, run `claude`, then `/login`.
+
 ## 1.0.4 — 2026-10-09
 
 - New `/done`: closes a session. Saves what was learned to the wiki and memory, notes what is unfinished, cleans up, commits and pushes, then tells you to type /exit.
