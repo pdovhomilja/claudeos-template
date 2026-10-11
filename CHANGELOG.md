@@ -6,6 +6,12 @@ A line starting with **After updating:** is something the assistant does once af
 Releasing (template maintainers): every merge to `main` is a release. Bump `VERSION`, add a section at the top
 (`## X.Y.Z — YYYY-MM-DD`), merge, then tag `main` as `vX.Y.Z` and push the tag.
 
+## 1.2.0 — 2026-10-12
+
+- Typing `jarvis` now opens with a short greeting: what is new since the version you last saw (once per version), what is due today, and a few things you can ask. It is the new `/start`; `jarvis "your question"` still goes straight to your question.
+- The installer starts the first-time setup through `/start` too. On the very first start Claude Code can skip it after its own first-start questions (colour, trust); the installer now says to type `/start` if it only waits.
+- **After updating:** in `~/.local/bin/jarvis`, put the line `[ $# -gt 0 ] || set -- /start` just before the last line (`exec claude "$@"`), so plain `jarvis` opens with the greeting.
+
 ## 1.1.1 — 2026-10-11
 
 - Server install: `.env` (it holds the Claude key) can only be read by you; it was readable by other users of the server.
