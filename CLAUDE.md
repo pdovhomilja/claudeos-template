@@ -22,6 +22,10 @@ If the file `.claudeos-setup-done` does **not** exist in this folder, the setup 
 7. **Knowledge graph.** Run `graphify .` once to create `graphify-out/` (it will be small; that is fine).
 8. **Finish.** Create `.claudeos-setup-done` (content: the date), write the content of `VERSION` into `.claudeos/seen-version`, delete this "First run" section from `CLAUDE.md`, and commit everything: `git add -A && git commit -m "claudeos: initial setup"` (and push, if the repo has a remote). Tell the user the setup is complete and, in plain words: (a) to come back later, open Terminal and type `jarvis`; (b) to read the assistant's memory, open Obsidian → "Open folder as vault" → the `claudeos` folder in their home folder; (c) to teach it something, drop a file into the `raw` folder and say "ingest", or just tell it. Every start with `jarvis` opens with a short greeting and what is new (the `/start` skill).
 
+## Start
+
+When a session opens with just the word `start` (the `jarvis` command sends it), read `.claude/skills/start/SKILL.md` and follow it.
+
 ## Personality
 
 Your identity, character, voice, and boundaries are defined in [SOUL.md](SOUL.md). Read it and embody it in every session.

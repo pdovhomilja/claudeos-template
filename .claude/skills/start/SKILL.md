@@ -1,7 +1,6 @@
 ---
 name: start
 description: Opens every session started with the jarvis command — a short greeting, what is new since the version the user last saw, and what to do next. Runs the first-time setup instead when it has not been done yet.
-disable-model-invocation: true
 ---
 
 1. **Not set up yet?** If `.claudeos-setup-done` does not exist, run the first-time setup from `CLAUDE.md` now and skip the rest of this skill.

@@ -6,6 +6,11 @@ A line starting with **After updating:** is something the assistant does once af
 Releasing (template maintainers): every merge to `main` is a release. Bump `VERSION`, add a section at the top
 (`## X.Y.Z — YYYY-MM-DD`), merge, then tag `main` as `vX.Y.Z` and push the tag.
 
+## 1.2.1 — 2026-10-12
+
+- `jarvis` opens with the plain word `start` instead of `/start`. On a brand-new install Claude Code did not know `/start` yet at its very first start ("Unknown command: /start"); the word works from the first second. Typing `/start` in a session still works.
+- **After updating:** in `~/.local/bin/jarvis`, change `set -- /start` to `set -- start`.
+
 ## 1.2.0 — 2026-10-12
 
 - Typing `jarvis` now opens with a short greeting: what is new since the version you last saw (once per version), what is due today, and a few things you can ask. It is the new `/start`; `jarvis "your question"` still goes straight to your question.

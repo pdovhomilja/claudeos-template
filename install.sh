@@ -374,7 +374,7 @@ main() {
 
   say "7/8 Shortcut"
   STEP="creating the jarvis command"
-  printf '#!/bin/bash\ncd "$HOME/claudeos" || exit 1\nT=$(sed -n "s/^CLAUDE_CODE_OAUTH_TOKEN=//p" .env 2>/dev/null | tail -1)\n[ -n "$T" ] && export CLAUDE_CODE_OAUTH_TOKEN="$T"\n[ $# -gt 0 ] || set -- /start\nexec claude "$@"\n' > "$BIN/jarvis"
+  printf '#!/bin/bash\ncd "$HOME/claudeos" || exit 1\nT=$(sed -n "s/^CLAUDE_CODE_OAUTH_TOKEN=//p" .env 2>/dev/null | tail -1)\n[ -n "$T" ] && export CLAUDE_CODE_OAUTH_TOKEN="$T"\n[ $# -gt 0 ] || set -- start\nexec claude "$@"\n' > "$BIN/jarvis"
   chmod +x "$BIN/jarvis"
   info "ok: from now on, open Terminal and type  jarvis  then Enter."
 
@@ -390,17 +390,17 @@ main() {
   trap - ERR
   if [ -f "$DIR/.claudeos-setup-done" ]; then
     info "Everything is already set up. Starting your assistant."
-    cd "$DIR" && exec claude /start </dev/$TTY
+    cd "$DIR" && exec claude start </dev/$TTY
   fi
   info "Claude Code starts now. What you will see:"
   info "  1. A colour theme: press Enter."
   info "  2. \"Do you trust the files in this folder?\": choose Yes."
   info "  3. Your assistant introduces itself and asks a few questions. Just answer in your own words."
   ls -d "$DIR".old-* >/dev/null 2>&1 && info "     It also offers to bring in what was in your old claudeos folder."
-  info "If after these questions it only waits for you, type  /start  and press Enter."
+  info "If after these questions it only waits for you, type  start  and press Enter."
   info "To leave later, type /exit. To come back: open Terminal and type  jarvis"
   wait_enter
-  cd "$DIR" && exec claude /start </dev/$TTY
+  cd "$DIR" && exec claude start </dev/$TTY
 }
 
 main "$@"
