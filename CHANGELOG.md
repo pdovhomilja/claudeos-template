@@ -6,6 +6,12 @@ A line starting with **After updating:** is something the assistant does once af
 Releasing (template maintainers): every merge to `main` is a release. Bump `VERSION`, add a section at the top
 (`## X.Y.Z — YYYY-MM-DD`), merge, then tag `main` as `vX.Y.Z` and push the tag.
 
+## 1.1.0 — 2026-10-11
+
+- The installer logs in to Claude at step 4, right after installing it, instead of at the very end. Without a Claude subscription you find out in the first minutes, not after the whole install.
+- On a server the installer uses `claude setup-token`: a key that lasts a year instead of a login that runs out after about 28 days. It is saved in `.env` (never committed); the twin and the `jarvis` command read it from there.
+- If you already had a `claudeos` folder, the installer still renames it (never deletes it), and now your assistant offers to bring its content in during the first-time setup: files go to `raw/migrated/`, get read into the wiki, and what it learns there answers the setup questions in advance. The old folder is not touched.
+
 ## 1.0.5 — 2026-10-10
 
 - The twin warns you in Discord when its Claude login on the server has fewer than 5 days left (a `/login` lasts about 28 days). The warning comes with the morning run and tells you what to do: ssh in, run `claude`, then `/login`.

@@ -32,7 +32,7 @@ You need a **Claude Pro or Max** subscription and a free **GitHub** account (you
    ```
 
    ✓ is already there, ○ will be done now, – is not needed on this kind of machine. Only what is missing gets installed.
-4. Follow what it says on screen. It connects GitHub in your browser (check that it shows **your own** account), makes **your own private copy** of this template (only you can see it), and starts your assistant, which asks you a few questions.
+4. Follow what it says on screen. It logs in to your Claude account, connects GitHub in your browser (check that it shows **your own** account), makes **your own private copy** of this template (only you can see it), and starts your assistant, which asks you a few questions. If you already had a `claudeos` folder, it is renamed to `claudeos.old-<date>` (never deleted) and the assistant offers to bring its content into the new copy.
 5. Next time: open Terminal and type `jarvis`.
 
 If anything stops, paste the same line again: it continues where it stopped. Nothing is installed outside your home folder except Apple's developer tools and Obsidian on a Mac, git on Linux, and Tailscale on a server.
@@ -56,7 +56,7 @@ Each person runs their own: own repo, own server, own Claude subscription, own T
 1. Push your claudeOS repo to a **private** GitHub repo.
 2. Ubuntu 24.04 server, x86_64 (4 vCPU / 8 GB / 64 GB with the browser; 2 vCPU / 4 GB without), a user with sudo. Log in as that user and run:
    `curl -fsSL https://raw.githubusercontent.com/pdovhomilja/claudeos-template/main/install.sh | bash -s -- --server`
-3. It shows the checklist, installs Claude Code, Tailscale, uv, graphify and the browser, logs into **your** GitHub (open `github.com/login/device` on your phone or laptop), clones your copy to `~/claudeos`, installs the systemd timers and starts the browser desktop. It prints what is left: `tailscale up`, the browser steps below, `.env` from `.env.example`, `claude` → `/login`, a test run, enabling the timers.
+3. It shows the checklist, installs Claude Code, Tailscale, uv, graphify and the browser, logs into **your** Claude account (`claude setup-token`: a key that lasts a year, saved in `.env`) and **your** GitHub (open `github.com/login/device` on your phone or laptop), clones your copy to `~/claudeos`, installs the systemd timers and starts the browser desktop. It prints what is left: `tailscale up`, the browser steps below, filling in `.env`, a test run, enabling the timers.
 4. Discord: create a server and a bot (Developer Portal → Bot → token; scopes `bot`, permissions Send Messages, Create Public Threads, Send Messages in Threads, Read Message History, Add Reactions; Message Content intent on), invite it to one private channel, put token, channel id and your user id in `.env`.
 5. On your laptop keep working with `claude` in your own clone; the session pulls what the twin pushed.
 
