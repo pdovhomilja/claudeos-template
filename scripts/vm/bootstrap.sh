@@ -60,9 +60,10 @@ if [ -f "$HOME/.config/tigervnc/passwd" ]; then
   echo "    then on the server run once: cd $DIR && claude --chrome   (connects Claude to that browser)"
 fi
 [ -f "$DIR/.env" ] || cp "$DIR/.env.example" "$DIR/.env"
+chmod 600 "$DIR/.env"
 grep -q '^DISCORD_BOT_TOKEN=.' "$DIR/.env" || echo "  - fill in $DIR/.env (Discord bot, optional mailbox; the notes are in the file)"
 grep -q '^CLAUDE_CODE_OAUTH_TOKEN=.' "$DIR/.env" || claude auth status >/dev/null 2>&1 \
   || echo "  - claude setup-token (log in with YOUR Claude account), then add the key to $DIR/.env as CLAUDE_CODE_OAUTH_TOKEN=<key>"
-echo "  - type jarvis (or: cd $DIR && claude) and say 'run the first-time setup' if not done yet"
+echo "  - log out and in again (new tools are found from then on), type jarvis and say 'run the first-time setup' if not done yet"
 echo "  - test: bash $DIR/scripts/twin/run.sh midday   (brief appears in Discord)"
 echo "  - then: systemctl --user enable --now claudeos-twin.timer claudeos-mail.timer"

@@ -6,6 +6,13 @@ A line starting with **After updating:** is something the assistant does once af
 Releasing (template maintainers): every merge to `main` is a release. Bump `VERSION`, add a section at the top
 (`## X.Y.Z — YYYY-MM-DD`), merge, then tag `main` as `vX.Y.Z` and push the tag.
 
+## 1.1.1 — 2026-10-11
+
+- Server install: `.env` (it holds the Claude key) can only be read by you; it was readable by other users of the server.
+- Server install: the closing list says to log out and in again before typing `jarvis` (the window the installer ran in does not know the new command yet), and no longer suggests plain `claude`, which does not use the key from `.env`.
+- The installer says the Claude login link on a server runs over several lines and all of them have to be copied.
+- **After updating:** on a server, run `chmod 600 ~/claudeos/.env`.
+
 ## 1.1.0 — 2026-10-11
 
 - The installer logs in to Claude at step 4, right after installing it, instead of at the very end. Without a Claude subscription you find out in the first minutes, not after the whole install.

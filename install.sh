@@ -292,7 +292,8 @@ main() {
     n=$((n + 1)); [ "$n" -le 3 ] || fail "Claude login did not finish."
     info "What happens now:"
     if [ "$SERVER" = 1 ]; then
-      info "  1. A long link appears. Open it on your phone or laptop and log in with your Claude account."
+      info "  1. A long link appears, over several lines. Copy all of its lines, open it on your phone or laptop"
+      info "     and log in with your Claude account."
       info "  2. Click Authorize, copy the code it shows, paste it here and press Enter."
       info "  3. A key starting with sk-ant-oat01- appears. It lets this server use Claude for a year."
       claude setup-token </dev/$TTY || true
@@ -366,7 +367,8 @@ main() {
   fi
   if [ -s "$TOKEN_FILE" ]; then   # .env is never committed; the twin and the jarvis command read the key from it
     [ -f "$DIR/.env" ] || cp "$DIR/.env.example" "$DIR/.env"
-    (umask 077; printf '\nCLAUDE_CODE_OAUTH_TOKEN=%s\n' "$(cat "$TOKEN_FILE")" >> "$DIR/.env")
+    printf '\nCLAUDE_CODE_OAUTH_TOKEN=%s\n' "$(cat "$TOKEN_FILE")" >> "$DIR/.env"
+    chmod 600 "$DIR/.env"
     rm -f "$TOKEN_FILE"
   fi
 
