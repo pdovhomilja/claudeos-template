@@ -11,6 +11,7 @@
 TEMPLATE="pdovhomilja/claudeos-template"
 DIR="$HOME/claudeos"
 BIN="$HOME/.local/bin"
+TOKEN_FILE="$HOME/.config/claudeos/claude-token"   # server only: holds the Claude key until ~/claudeos exists
 STEP="starting"
 
 say()  { printf '\n\033[1m%s\033[0m\n' "$1"; }
@@ -156,11 +157,21 @@ preflight() {
     row skip "Browser on the server" "not needed on a laptop"
     if [ "$OS" = Darwin ]; then check "Obsidian" has_obsidian; else row skip "Obsidian" "optional, from obsidian.md"; fi
   fi
+  if command -v claude >/dev/null && has_claude_login; then
+    row yes "Claude login" "logged in"
+  else
+    row later "Claude login" "you will log in (step 4)"
+  fi
   if command -v gh >/dev/null && gh auth status >/dev/null 2>&1; then
     row yes "GitHub login" "logged in as $(gh api user -q .login 2>/dev/null)"
   else
-    row later "GitHub login" "you will log in (step 4)"
+    row later "GitHub login" "you will log in (step 5)"
   fi
+}
+
+has_claude_login() {   # a server uses a year-long key from `claude setup-token` (kept in .env); a laptop a normal login
+  claude auth status >/dev/null 2>&1 && return 0
+  [ "$SERVER" = 1 ] && { [ -s "$TOKEN_FILE" ] || grep -q '^CLAUDE_CODE_OAUTH_TOKEN=.' "$DIR/.env" 2>/dev/null; }
 }
 
 main() {
@@ -171,6 +182,8 @@ main() {
   STEP="checking this computer"
   [ "$(id -u)" != 0 ] || fail "Please run it without 'sudo' and not as root: paste the command exactly as you got it."
   { : </dev/tty; } 2>/dev/null || fail "This installer has to run in a Terminal window. Open Terminal, paste the command there and press Enter."
+  # macOS kqueue rejects the /dev/tty alias (Claude Code dies with EINVAL), so hand it the real device
+  TTY=$(ps -o tty= -p $$ | tr -d ' '); case "$TTY" in ""|"?"*) TTY=tty ;; esac
   OS=$(uname -s)
   case "$OS" in Darwin|Linux) ;; *) fail "This installer works on Mac and Linux. On Windows follow the README by hand." ;; esac
   case "$(uname -m)" in arm64|aarch64) ARCH=arm64 ;; x86_64|amd64) ARCH=amd64 ;; *) fail "Unsupported processor: $(uname -m)." ;; esac
@@ -197,7 +210,7 @@ main() {
   info "You can stop at any time by closing this window, and continue later by pasting the command again."
   wait_enter "Press Enter to start."
 
-  say "1/7 What is already on this computer"
+  say "1/8 What is already on this computer"
   STEP="checking what is installed"
   preflight
   if [ "$MISSING" = 0 ]; then
@@ -206,7 +219,7 @@ main() {
     wait_enter "Press Enter to install what is missing ($MISSING)."
   fi
 
-  say "2/7 Basic tools"
+  say "2/8 Basic tools"
   STEP="installing Apple's developer tools"
   if [ "$OS" = Darwin ] && ! xcode-select -p >/dev/null 2>&1; then
     xcode-select --install >/dev/null 2>&1 || true
@@ -233,7 +246,7 @@ main() {
   fi
   info "ok"
 
-  say "3/7 Assistant software"
+  say "3/8 Assistant software"
   add_path_to_profile
   STEP="installing Node.js"
   has_node || download_node
@@ -272,7 +285,32 @@ main() {
   fi
   info "ok"
 
-  say "4/7 Connect GitHub (stores your assistant's memory, privately)"
+  say "4/8 Connect Claude (your Pro or Max subscription)"
+  STEP="connecting Claude"
+  n=0
+  until has_claude_login; do
+    n=$((n + 1)); [ "$n" -le 3 ] || fail "Claude login did not finish."
+    info "What happens now:"
+    if [ "$SERVER" = 1 ]; then
+      info "  1. A long link appears. Open it on your phone or laptop and log in with your Claude account."
+      info "  2. Click Authorize, copy the code it shows, paste it here and press Enter."
+      info "  3. A key starting with sk-ant-oat01- appears. It lets this server use Claude for a year."
+      claude setup-token </dev/$TTY || true
+      printf '\n   Copy that key, paste it here and press Enter: '
+      read -r answer </dev/tty
+      answer=$(printf '%s' "$answer" | tr -d '[:space:]')
+      case "$answer" in
+        sk-ant-oat*) mkdir -p "$(dirname "$TOKEN_FILE")"; (umask 077; printf '%s\n' "$answer" > "$TOKEN_FILE") ;;
+        *) info "That was not the key. Let's try again." ;;
+      esac
+    else
+      info "  Your browser opens claude.ai. Log in with your Claude account and click Authorize, then come back here."
+      claude auth login </dev/$TTY || info "That did not finish. Let's try again."
+    fi
+  done
+  info "ok"
+
+  say "5/8 Connect GitHub (stores your assistant's memory, privately)"
   STEP="connecting GitHub"
   n=0
   until gh auth status >/dev/null 2>&1; do
@@ -303,7 +341,7 @@ main() {
   git config --global user.email >/dev/null || git config --global user.email "$(gh api user -q .id)+$LOGIN@users.noreply.github.com"
   info "ok"
 
-  say "5/7 Your private copy"
+  say "6/8 Your private copy"
   STEP="creating your private copy on GitHub"
   if [ -d "$DIR/.git" ] && is_claudeos_repo "$(git -C "$DIR" remote get-url origin 2>/dev/null | sed -E 's#^(https://github.com/|git@github.com:)##; s#\.git$##')"; then
     info "Found $DIR, keeping it. (To get a newer claudeOS version, tell your assistant: update yourself.)"
@@ -311,6 +349,7 @@ main() {
     if [ -e "$DIR" ]; then
       mv "$DIR" "$DIR.old-$(date +%Y%m%d-%H%M%S)"
       info "There was already a folder called claudeos; it was renamed, not deleted."
+      [ "$SERVER" = 1 ] || info "Your assistant will offer to bring its content into the new copy."
     fi
     NAME=claudeos; n=1
     while gh repo view "$LOGIN/$NAME" >/dev/null 2>&1 && ! is_claudeos_repo "$LOGIN/$NAME"; do
@@ -325,34 +364,37 @@ main() {
     done
     info "ok: github.com/$LOGIN/$NAME (private), on this computer in $DIR"
   fi
+  if [ -s "$TOKEN_FILE" ]; then   # .env is never committed; the twin and the jarvis command read the key from it
+    [ -f "$DIR/.env" ] || cp "$DIR/.env.example" "$DIR/.env"
+    (umask 077; printf '\nCLAUDE_CODE_OAUTH_TOKEN=%s\n' "$(cat "$TOKEN_FILE")" >> "$DIR/.env")
+    rm -f "$TOKEN_FILE"
+  fi
 
-  say "6/7 Shortcut"
+  say "7/8 Shortcut"
   STEP="creating the jarvis command"
-  printf '#!/bin/bash\ncd "$HOME/claudeos" && exec claude "$@"\n' > "$BIN/jarvis"
+  printf '#!/bin/bash\ncd "$HOME/claudeos" || exit 1\nT=$(sed -n "s/^CLAUDE_CODE_OAUTH_TOKEN=//p" .env 2>/dev/null | tail -1)\n[ -n "$T" ] && export CLAUDE_CODE_OAUTH_TOKEN="$T"\nexec claude "$@"\n' > "$BIN/jarvis"
   chmod +x "$BIN/jarvis"
   info "ok: from now on, open Terminal and type  jarvis  then Enter."
 
   if [ "$SERVER" = 1 ]; then
-    say "7/7 Server twin"
+    say "8/8 Server twin"
     STEP="setting up the server twin"
     [ -f "$DIR/scripts/vm/bootstrap.sh" ] || fail "$DIR is not a copy of the claudeOS template."
     bash "$DIR/scripts/vm/bootstrap.sh" "$(git -C "$DIR" remote get-url origin)"
     exit 0
   fi
 
-  say "7/7 Meet your assistant"
+  say "8/8 Meet your assistant"
   trap - ERR
-  # macOS kqueue rejects the /dev/tty alias (Claude Code dies with EINVAL), so hand it the real device
-  TTY=$(ps -o tty= -p $$ | tr -d ' '); case "$TTY" in ""|"?"*) TTY=tty ;; esac
   if [ -f "$DIR/.claudeos-setup-done" ]; then
     info "Everything is already set up. Starting your assistant."
     cd "$DIR" && exec claude </dev/$TTY
   fi
   info "Claude Code starts now. What you will see:"
   info "  1. A colour theme: press Enter."
-  info "  2. Login: choose your Claude account (subscription); the browser opens; click Authorize."
-  info "  3. \"Do you trust the files in this folder?\": choose Yes."
-  info "  4. Your assistant introduces itself and asks a few questions. Just answer in your own words."
+  info "  2. \"Do you trust the files in this folder?\": choose Yes."
+  info "  3. Your assistant introduces itself and asks a few questions. Just answer in your own words."
+  ls -d "$DIR".old-* >/dev/null 2>&1 && info "     It also offers to bring in what was in your old claudeos folder."
   info "To leave later, type /exit. To come back: open Terminal and type  jarvis"
   wait_enter
   cd "$DIR" && exec claude "run the first-time setup" </dev/$TTY
