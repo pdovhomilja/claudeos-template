@@ -7,27 +7,34 @@
 #        python3 scripts/twin/mailbox.py wake <uid>...   -> those uids that must wake the twin: replies to the
 #                                                           assistant's sent mail, mail from the owner, or from
 #                                                           an address in scripts/twin/mail-watchlist.txt
+#        --box <PREFIX> (anywhere)                        -> another mailbox, env <PREFIX>_SERVER/_LOGIN/_PASS
+#                                                           (scripts/twin/mailboxes.txt)
 # Env: MAIL_SERVER, MAIL_LOGIN, MAIL_PASS, OWNER_EMAIL
 import email, imaplib, os, re, sys
 from email.header import decode_header, make_header
 from email.utils import parseaddr
 from env import ROOT, RUNS  # loads .env
 
+# Default box is the assistant's own (MAIL_*); --box picks a watched one from scripts/twin/mailboxes.txt.
+BOX = "MAIL"
+if "--box" in sys.argv:
+    i = sys.argv.index("--box"); BOX = sys.argv[i + 1]; del sys.argv[i:i + 2]
+
 def h(v): return str(make_header(decode_header(v or "")))
 
-m = imaplib.IMAP4_SSL(os.environ["MAIL_SERVER"], 993, timeout=30)
-m.login(os.environ["MAIL_LOGIN"], os.environ["MAIL_PASS"])
+m = imaplib.IMAP4_SSL(os.environ[BOX + "_SERVER"], 993, timeout=30)
+m.login(os.environ[BOX + "_LOGIN"], os.environ[BOX + "_PASS"])
 m.select("INBOX")
 
 if sys.argv[1] == "new":
     # Tracks the highest uid seen in a file, so mail the owner already opened elsewhere still counts as new.
-    state = os.path.join(RUNS, "mailbox-lastuid")
+    state = os.path.join(RUNS, "mailbox-lastuid" + ("" if BOX == "MAIL" else "-" + BOX))
     uids = [int(u) for u in m.uid("search", None, "ALL")[1][0].split()]
     last = int(open(state).read()) if os.path.exists(state) else None
     if last is not None:
         for u in uids:
             if u > last: print(u)
-    if uids: open(state, "w").write(str(max(uids + [last or 0])))
+    open(state, "w").write(str(max(uids + [last or 0])))  # also when empty, so the first mail of a new box counts
 elif sys.argv[1] == "wake":
     def ids(v): return set(re.findall(r"<[^>]+>", v or ""))
     watch = {os.environ.get("OWNER_EMAIL", "").lower()}

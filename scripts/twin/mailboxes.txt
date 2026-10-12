@@ -1,0 +1,4 @@
+# Extra mailboxes the twin watches (besides the assistant's own). Any new mail in them wakes the twin
+# within 2 minutes, no filtering; the wiki page next to the box says what to do with that mail.
+# One per line: <env prefix> <wiki page>. Creds go in .env as <prefix>_SERVER, <prefix>_LOGIN, <prefix>_PASS.
+# Example: CASES_MAIL wiki/projects/court-case.md
