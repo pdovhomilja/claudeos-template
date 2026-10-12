@@ -6,6 +6,10 @@ A line starting with **After updating:** is something the assistant does once af
 Releasing (template maintainers): every merge to `main` is a release. Bump `VERSION`, add a section at the top
 (`## X.Y.Z — YYYY-MM-DD`), merge, then tag `main` as `vX.Y.Z` and push the tag.
 
+## 1.3.0 — 2026-10-12
+
+- Recurring jobs without touching system files: give a project skill a `schedule:` line in its frontmatter (for example `schedule: monday night run`) and the twin follows it in that run. Sending still waits for your ✅ like any other draft.
+
 ## 1.2.1 — 2026-10-12
 
 - `jarvis` opens with the plain word `start` instead of `/start`. On a brand-new install Claude Code did not know `/start` yet at its very first start ("Unknown command: /start"); the word works from the first second. Typing `/start` in a session still works.

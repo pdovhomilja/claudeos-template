@@ -12,7 +12,7 @@ Work in this order and stop when done. Do not ask questions; decide, or put the 
 
 4. **Goals.** Read `wiki/goals.md`. It is the compass: every run works toward those goals and nothing else, in the order of the biggest gap per hour of {{USER_NAME}}'s time. For the goal you pick, finish its next milestone or push it as far as tier 0 allows. What you sensed in step 3 matters only where it moves a goal or threatens one. Update the "Current" line of each goal you touched. If `wiki/goals.md` has no goals yet, say so at the top of the brief and propose three, drawn from the wiki.
 
-5. **Act, tier 0 only.** Research, analyses, syntheses, wiki pages, drafts of documents and replies (saved under `staging/`). Finish things; a half-done analysis is worth nothing. Log every change in `wiki/log.md` per WIKI.md.
+5. **Act, tier 0 only.** Scheduled skills first: a project skill in `.claude/skills/` whose frontmatter has a `schedule:` line matching this run (weekday + night or midday run, e.g. `monday night run`; find them with `grep -l "^schedule:" .claude/skills/*/SKILL.md`) is due; follow it within tier 0 and name it in the brief. Research, analyses, syntheses, wiki pages, drafts of documents and replies (saved under `staging/`). Finish things; a half-done analysis is worth nothing. Log every change in `wiki/log.md` per WIKI.md.
 
 6. **Brief.** Write the file named under "This run", in {{USER_NAME}}'s language, under 600 words, exactly these sections:
    - **Goals** — one line per goal from `wiki/goals.md`: current vs target, and what moved this run (or "—").
