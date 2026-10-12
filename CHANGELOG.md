@@ -6,6 +6,10 @@ A line starting with **After updating:** is something the assistant does once af
 Releasing (template maintainers): every merge to `main` is a release. Bump `VERSION`, add a section at the top
 (`## X.Y.Z — YYYY-MM-DD`), merge, then tag `main` as `vX.Y.Z` and push the tag.
 
+## 1.4.0 — 2026-10-12
+
+- The twin can watch more mailboxes than the assistant's own, for example an address collecting documents for one case. List each in `scripts/twin/mailboxes.txt` with a wiki page that says what to do with its mail, and put its login in `.env` (`<PREFIX>_SERVER`, `<PREFIX>_LOGIN`, `<PREFIX>_PASS`). Any new mail there wakes the twin within 2 minutes. It still never replies on its own.
+
 ## 1.3.0 — 2026-10-12
 
 - Recurring jobs without touching system files: give a project skill a `schedule:` line in its frontmatter (for example `schedule: monday night run`) and the twin follows it in that run. Sending still waits for your ✅ like any other draft.
