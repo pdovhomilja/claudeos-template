@@ -7,7 +7,7 @@ Run only after the owner approved the exact text (tier 1).
 --wait adds a row with the Message-ID to wiki/topics/waiting-for.md, so the twin knows what to do when the answer comes.
 Env: MAIL_SERVER, MAIL_LOGIN, MAIL_PASS, MAIL_FROM ("Name <address>"), OWNER_EMAIL
 """
-import argparse, imaplib, mimetypes, os, smtplib, sys, time
+import argparse, imaplib, mimetypes, os, smtplib, subprocess, sys, time
 from email.message import EmailMessage
 from email.utils import formatdate, make_msgid, parseaddr
 from pathlib import Path
@@ -53,6 +53,8 @@ with smtplib.SMTP(host, 587, timeout=30) as s:
     s.login(user, pw)
     print("refused:", s.send_message(m))
 print("Message-ID:", m["Message-ID"])
+if a.in_reply_to:  # the answered mail stops showing as unread in the owner's mail app
+    subprocess.run([sys.executable, str(Path(__file__).resolve().parent / "twin/mark-read.py"), a.in_reply_to])
 
 if a.wait:
     wf = Path(ROOT) / "wiki/topics/waiting-for.md"

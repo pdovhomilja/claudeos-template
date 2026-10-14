@@ -6,6 +6,10 @@ A line starting with **After updating:** is something the assistant does once af
 Releasing (template maintainers): every merge to `main` is a release. Bump `VERSION`, add a section at the top
 (`## X.Y.Z — YYYY-MM-DD`), merge, then tag `main` as `vX.Y.Z` and push the tag.
 
+## 1.5.0 — 2026-10-14
+
+- Mail the assistant read and answered is now marked read, in its own mailbox and in every mailbox in `scripts/twin/mailboxes.txt`. Before, answered mail stayed unread and cluttered the mail app. Sending a reply does it on its own; for a mail answered another way, `python3 scripts/twin/mark-read.py "<Message-ID>"` does the same.
+
 ## 1.4.0 — 2026-10-12
 
 - The twin can watch more mailboxes than the assistant's own, for example an address collecting documents for one case. List each in `scripts/twin/mailboxes.txt` with a wiki page that says what to do with its mail, and put its login in `.env` (`<PREFIX>_SERVER`, `<PREFIX>_LOGIN`, `<PREFIX>_PASS`). Any new mail there wakes the twin within 2 minutes. It still never replies on its own.
