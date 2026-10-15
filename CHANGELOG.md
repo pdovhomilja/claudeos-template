@@ -6,6 +6,10 @@ A line starting with **After updating:** is something the assistant does once af
 Releasing (template maintainers): every merge to `main` is a release. Bump `VERSION`, add a section at the top
 (`## X.Y.Z — YYYY-MM-DD`), merge, then tag `main` as `vX.Y.Z` and push the tag.
 
+## 1.5.1 — 2026-10-15
+
+- The twin's `git pull` no longer fails with "Cannot rebase onto multiple branches" when two runs start at the same moment (for example a mail run during the 07:30 run). Pulls now wait for each other through a lock file (`.git/pull.lock`). If you added scheduled jobs of your own that run `git pull` on the server, start them the same way: `flock .git/pull.lock git pull ...`.
+
 ## 1.5.0 — 2026-10-14
 
 - Mail the assistant read and answered is now marked read, in its own mailbox and in every mailbox in `scripts/twin/mailboxes.txt`. Before, answered mail stayed unread and cluttered the mail app. Sending a reply does it on its own; for a mail answered another way, `python3 scripts/twin/mark-read.py "<Message-ID>"` does the same.

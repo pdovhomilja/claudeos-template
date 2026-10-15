@@ -25,7 +25,7 @@ for l in open(".env"):
 
 # Commit leftovers first, so the pull never needs an autostash.
 git add -A wiki raw staging >/dev/null 2>&1; git commit -qm "twin: leftovers before $MODE run $STAMP" >/dev/null 2>&1 || true
-git pull --rebase -q origin main >> "$LOG" 2>&1
+flock .git/pull.lock git pull --rebase -q origin main >> "$LOG" 2>&1
 
 # Briefs live in month folders (wiki/twin/YYYY-MM/). Set below the pull, so edits never shift the bytes bash already read.
 BRIEF=""; IMPROVE=""
@@ -59,7 +59,7 @@ echo "claude exit: $?" >> "$LOG"
 # run.sh pushes, not Claude (the prompt says so).
 git add -A wiki raw staging >/dev/null 2>&1
 git commit -qm "twin: $MODE run $STAMP" >/dev/null 2>&1 || true
-git pull --rebase -q origin main >> "$LOG" 2>&1
+flock .git/pull.lock git pull --rebase -q origin main >> "$LOG" 2>&1
 git push -q origin main >> "$LOG" 2>&1 || echo "push failed" >> "$LOG"
 
 if [ "$MODE" = mail ]; then
