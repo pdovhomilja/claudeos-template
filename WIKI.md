@@ -28,6 +28,7 @@ wiki/
   topics/               # concepts, domains, recurring themes
   sources/              # one summary page per raw source
   syntheses/            # answers, comparisons, analyses worth keeping
+  disciplines/<d>/      # how experts in a discipline work (social media, video, SEO…): rules, topics, sources, for-you page; fed by /learn (.claude/skills/learn), raw in raw/disciplines/<d>/
   tasks.md              # open to-dos and follow-ups, with owner and date
   goals.md              # {{USER_NAME}}'s goals; the twin and /morning work toward these
   twin/YYYY-MM/         # the twin's briefs, one file per run (output, not facts; no frontmatter)

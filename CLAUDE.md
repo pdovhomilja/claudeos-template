@@ -68,6 +68,7 @@ Project skills live in `.claude/skills/` (marketing pack from coreyhaines31/mark
 - **Daily rhythm:** `/morning`, `/eod`, `/friday` (built on `wiki/tasks.md` and `wiki/goals.md`); `/grill-me` to get what is in {{USER_NAME}}'s head onto disk; `/handoff` to pass a session on; `/done` to close a session (save, clean up, commit, push).
 - **Health check:** `/audit` scores the system (Four Cs) and saves a dated report in `audits/`; weekly during setup.
 - **Updates:** "update yourself" (skill `update`) brings in the newest claudeOS version; data and the user's own edits are kept.
+- **Discipline knowledge bases:** `/learn <link>` adds a video, post, article or repo {{USER_NAME}} found interesting to `wiki/disciplines/<discipline>/` (skill `learn`). Before work in a discipline (a post, a reel, a page, an audit), read its `<d>-rules.md` and apply it.
 - **superpowers brainstorming:** wiki, communication, research, and planning tasks are "bounded" by default — short design in chat, no spec/plan documents unless {{USER_NAME}} asks. Reserve the architectural path for code or multi-week initiatives.
 
 ## Files in this folder

@@ -6,6 +6,11 @@ A line starting with **After updating:** is something the assistant does once af
 Releasing (template maintainers): every merge to `main` is a release. Bump `VERSION`, add a section at the top
 (`## X.Y.Z — YYYY-MM-DD`), merge, then tag `main` as `vX.Y.Z` and push the tag.
 
+## 1.6.0 — 2026-10-18
+
+- New skill `learn`: send the assistant a video, post, article or repo you found interesting with `/learn <link>`, and it builds a knowledge base per discipline (social media, video, SEO, sales…) in `wiki/disciplines/`. Ideas from one person wait on a "bench"; a rule needs two independent sources or your own results. A short page per discipline, in your language, explains how an expert in it thinks. Once a month (first Friday) the twin proposes new material in the brief; you pick, nothing is added on its own.
+- Videos are transcribed on your machine: install `yt-dlp`, `ffmpeg` and Whisper (`mlx-whisper` on a Mac, `openai-whisper` elsewhere) when you first use it.
+
 ## 1.5.1 — 2026-10-15
 
 - The twin's `git pull` no longer fails with "Cannot rebase onto multiple branches" when two runs start at the same moment (for example a mail run during the 07:30 run). Pulls now wait for each other through a lock file (`.git/pull.lock`). If you added scheduled jobs of your own that run `git pull` on the server, start them the same way: `flock .git/pull.lock git pull ...`.
