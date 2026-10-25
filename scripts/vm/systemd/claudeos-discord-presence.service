@@ -1,0 +1,13 @@
+[Unit]
+Description=claudeOS Discord presence (bot shows online)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/usr/bin/env node %h/claudeos/scripts/twin/discord-presence.mjs
+Restart=always
+RestartSec=15
+
+[Install]
+WantedBy=default.target
