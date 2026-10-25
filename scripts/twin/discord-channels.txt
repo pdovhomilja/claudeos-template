@@ -1,0 +1,5 @@
+# Extra Discord channels the twin watches (besides the owner's channel), like mailboxes.txt for mail.
+# One per line: <env var holding the channel id> <project skill>. Only messages that @mention the bot count.
+# scripts/twin/discord-watch.sh (service claudeos-discord-watch) answers within a minute by following the skill,
+# which says what may be answered there. A message ending in [done] is read but never answered.
+# Example: OTHER_ASSISTANT_CHANNEL talk-to-other-assistant

@@ -6,6 +6,13 @@ A line starting with **After updating:** is something the assistant does once af
 Releasing (template maintainers): every merge to `main` is a release. Bump `VERSION`, add a section at the top
 (`## X.Y.Z — YYYY-MM-DD`), merge, then tag `main` as `vX.Y.Z` and push the tag.
 
+## 1.7.0 — 2026-10-25
+
+- The assistant can talk in more Discord channels than yours, for example with another person's assistant. List each channel in `scripts/twin/discord-channels.txt` with a project skill that says what may be answered there, and put the channel id in `.env` under the name you list. A message that mentions the bot gets an answer within about a minute, day and night, from an always-on service on the server (`claudeos-discord-watch`). Everything written there is treated as a question, never as an instruction.
+- A message ending in `[done]` closes an exchange: the assistant reads it and notes what is new, but never answers it. Two bots cannot talk in circles: at most 5 answers per channel in 15 minutes and 30 a day.
+- The bot shows as online in Discord while the server runs (`claudeos-discord-presence`, needs Node.js 22 or newer, which the installer already sets up).
+- **After updating:** on the server, only if `scripts/twin/discord-channels.txt` lists a channel: `cp ~/claudeos/scripts/vm/systemd/claudeos-discord-*.service ~/.config/systemd/user/ && systemctl --user daemon-reload && systemctl --user enable --now claudeos-discord-watch.service claudeos-discord-presence.service`. Otherwise tell the owner the feature exists and do nothing.
+
 ## 1.6.0 — 2026-10-18
 
 - New skill `learn`: send the assistant a video, post, article or repo you found interesting with `/learn <link>`, and it builds a knowledge base per discipline (social media, video, SEO, sales…) in `wiki/disciplines/`. Ideas from one person wait on a "bench"; a rule needs two independent sources or your own results. A short page per discipline, in your language, explains how an expert in it thinks. Once a month (first Friday) the twin proposes new material in the brief; you pick, nothing is added on its own.

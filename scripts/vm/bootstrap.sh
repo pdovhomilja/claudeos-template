@@ -67,3 +67,5 @@ grep -q '^CLAUDE_CODE_OAUTH_TOKEN=.' "$DIR/.env" || claude auth status >/dev/nul
 echo "  - log out and in again (new tools are found from then on), type jarvis and say 'run the first-time setup' if not done yet"
 echo "  - test: bash $DIR/scripts/twin/run.sh midday   (brief appears in Discord)"
 echo "  - then: systemctl --user enable --now claudeos-twin.timer claudeos-mail.timer"
+echo "  - optional, other bots or people in more Discord channels (scripts/twin/discord-channels.txt):"
+echo "    systemctl --user enable --now claudeos-discord-watch.service claudeos-discord-presence.service"

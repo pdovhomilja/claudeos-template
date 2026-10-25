@@ -1,0 +1,12 @@
+[Unit]
+Description=claudeOS Discord watcher (channels in scripts/twin/discord-channels.txt, every 5 s)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+ExecStart=/bin/bash %h/claudeos/scripts/twin/discord-watch.sh
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target
