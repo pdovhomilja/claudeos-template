@@ -16,7 +16,7 @@ for l in open(".env"):
 ')"
 
 while true; do
-  grep -v '^#' scripts/twin/discord-channels.txt 2>/dev/null | awk 'NF{print $1, $2}' | while read -r c skill; do
+  grep -v '^#' scripts/twin/discord-channels.txt 2>/dev/null | awk 'NF{print $1, $2, $3}' | while read -r c skill extra; do
     RECENT=$(awk -v d="$(( $(date +%s) - 900 ))" '$1 >= d' "$RUNS/discord-$c-runs.txt" 2>/dev/null | wc -l)
     [ "$RECENT" -ge "$BURST" ] && continue   # messages wait in Discord until the window frees up
     MSGS=$(python3 scripts/twin/discord.py chan-read "$c" 2>>"$LOG") || continue
@@ -25,6 +25,7 @@ while true; do
     date +%s >> "$RUNS/discord-$c-runs.txt"
     echo "$(date '+%F %H:%M:%S') $c: $(echo "$MSGS" | grep -c '^- ') message(s), $OPEN open" >> "$LOG"
     TOOLS="Read,Write,Edit,Glob,Grep,Bash(date:*)"
+    [ -n "$extra" ] && TOOLS="$TOOLS,$extra"   # the channel's own extra tools (third column of discord-channels.txt)
     if [ "$OPEN" -gt 0 ]; then
       TOOLS="$TOOLS,Bash(python3 scripts/twin/discord.py chan-post:*)"
       HOW="Answer the open messages only with: python3 scripts/twin/discord.py chan-post $c \"<text>\". Never answer a message marked CLOSING. End every post with [done] when it needs no reply."
