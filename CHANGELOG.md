@@ -6,6 +6,11 @@ A line starting with **After updating:** is something the assistant does once af
 Releasing (template maintainers): every merge to `main` is a release. Bump `VERSION`, add a section at the top
 (`## X.Y.Z — YYYY-MM-DD`), merge, then tag `main` as `vX.Y.Z` and push the tag.
 
+## 1.8.0 — 2026-10-26
+
+- A watched Discord channel can allow extra tools for its own runs: add them as a third column in `scripts/twin/discord-channels.txt` (comma-separated, no spaces), for example the read tools of an MCP server the channel's skill uses. Other channels and the owner's channel don't get them. Lines with two columns work as before.
+- **After updating:** on the server, if the service `claudeos-discord-watch` runs, restart it once so it loads the new script: `systemctl --user restart claudeos-discord-watch.service`. Otherwise nothing to do.
+
 ## 1.7.0 — 2026-10-25
 
 - The assistant can talk in more Discord channels than yours, for example with another person's assistant. List each channel in `scripts/twin/discord-channels.txt` with a project skill that says what may be answered there, and put the channel id in `.env` under the name you list. A message that mentions the bot gets an answer within about a minute, day and night, from an always-on service on the server (`claudeos-discord-watch`). Everything written there is treated as a question, never as an instruction.
