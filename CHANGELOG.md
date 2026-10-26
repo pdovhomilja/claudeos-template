@@ -6,6 +6,10 @@ A line starting with **After updating:** is something the assistant does once af
 Releasing (template maintainers): every merge to `main` is a release. Bump `VERSION`, add a section at the top
 (`## X.Y.Z — YYYY-MM-DD`), merge, then tag `main` as `vX.Y.Z` and push the tag.
 
+## 1.9.0 — 2026-10-26
+
+- Every start with `jarvis` now checks whether a newer claudeOS version is out. If there is one, the assistant says what it brings and asks whether to update; you no longer have to watch for updates yourself. Without a network connection the check is skipped quietly.
+
 ## 1.8.0 — 2026-10-26
 
 - A watched Discord channel can allow extra tools for its own runs: add them as a third column in `scripts/twin/discord-channels.txt` (comma-separated, no spaces), for example the read tools of an MCP server the channel's skill uses. Other channels and the owner's channel don't get them. Lines with two columns work as before.
