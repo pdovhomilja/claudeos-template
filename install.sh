@@ -176,8 +176,9 @@ has_claude_login() {   # a server uses a year-long key from `claude setup-token`
 
 login_with_qr() {   # server: `claude setup-token` in a hidden, very wide tmux window, so nothing has to be copied
   # out of a (browser) terminal. Returns 1 only if no link appeared; the caller then uses the manual way.
-  local tm="env -u TMUX tmux" url="" last="" code key=""
-  $tm kill-session -t claude-login 2>/dev/null
+  # Own tmux server (-L): a tmux already running on the server would start claude with its own settings and PATH.
+  local tm="env -u TMUX tmux -L claudeos-login" url="" last="" code key=""
+  $tm kill-server 2>/dev/null
   $tm new-session -d -s claude-login -x 1000 -y 50 'claude setup-token' || return 1
   for _ in $(seq 60); do   # the link is complete once it stays the same for a second
     sleep 1
@@ -185,7 +186,7 @@ login_with_qr() {   # server: `claude setup-token` in a hidden, very wide tmux w
     url=$($tm capture-pane -p -J -t claude-login 2>/dev/null | grep -o 'https://[^[:space:]]*' | head -1)
     [ -n "$url" ] && [ "$url" = "$last" ] && break
   done
-  if [ -z "$url" ] || [ "$url" != "$last" ]; then $tm kill-session -t claude-login 2>/dev/null; return 1; fi
+  if [ -z "$url" ] || [ "$url" != "$last" ]; then $tm kill-server 2>/dev/null; return 1; fi
   info "What happens now:"
   info "  1. Scan the code below with your phone, or click the link under it, and log in with your Claude account."
   info "  2. Click Authorize and copy the code it shows."
@@ -202,7 +203,7 @@ login_with_qr() {   # server: `claude setup-token` in a hidden, very wide tmux w
     [ -n "$key" ] && break
     $tm capture-pane -p -J -t claude-login 2>/dev/null | grep -qi error && break
   done
-  $tm kill-session -t claude-login 2>/dev/null
+  $tm kill-server 2>/dev/null
   if [ -n "$key" ]; then
     mkdir -p "$(dirname "$TOKEN_FILE")"; (umask 077; printf '%s\n' "$key" > "$TOKEN_FILE")
     info "Claude is connected. This server can use it for a year."

@@ -4,7 +4,7 @@
 set -u
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 T=$(mktemp -d)
-trap 'tmux kill-session -t qrtest 2>/dev/null; tmux kill-session -t claude-login 2>/dev/null; rm -rf "$T"' EXIT
+trap 'tmux kill-session -t qrtest 2>/dev/null; tmux kill-session -t other-tmux 2>/dev/null; tmux -L claudeos-login kill-server 2>/dev/null; rm -rf "$T"' EXIT
 FAILED=0
 ok() { printf 'ok   %s\n' "$1"; }
 bad() { printf 'FAIL %s\n' "$1"; FAILED=1; }
@@ -58,13 +58,19 @@ run_login "good-code#state"
 grep -qxF "   $URL" "$T/out" && ok "link printed on one line" || bad "link printed on one line"
 grep -q 'sk-ant-oat01' "$T/out" && bad "key not shown" || ok "key not shown"
 grep -q 'good-code' "$T/out" && bad "code not shown" || ok "code not shown"
-env -u TMUX tmux has-session -t claude-login 2>/dev/null && bad "login window closed" || ok "login window closed"
+env -u TMUX tmux -L claudeos-login ls >/dev/null 2>&1 && bad "login window closed" || ok "login window closed"
 
 echo "# wrong code"
 run_login "bad-code"
 [ "$(cat "$T/rc" 2>/dev/null)" = 0 ] && ok "returns 0 (the caller retries)" || bad "returns 0 (got $(cat "$T/rc" 2>/dev/null))"
 [ -e "$T/token" ] && bad "no key saved" || ok "no key saved"
 grep -q 'did not work' "$T/out" && ok "says it did not work" || bad "says it did not work"
-env -u TMUX tmux has-session -t claude-login 2>/dev/null && bad "login window closed" || ok "login window closed"
+env -u TMUX tmux -L claudeos-login ls >/dev/null 2>&1 && bad "login window closed" || ok "login window closed"
+
+echo "# a tmux is already running (as on jarvisOS: ttyd -> tmux), started without the fake claude on its PATH"
+env -u TMUX PATH=/usr/bin:/bin tmux new-session -d -s other-tmux 'sleep 600'
+run_login "good-code#state"
+[ "$(cat "$T/token" 2>/dev/null)" = "$KEY" ] && ok "key saved" || bad "key saved (got rc $(cat "$T/rc" 2>/dev/null))"
+env -u TMUX tmux has-session -t other-tmux 2>/dev/null && ok "the running tmux is left alone" || bad "the running tmux is left alone"
 
 exit $FAILED
