@@ -174,6 +174,43 @@ has_claude_login() {   # a server uses a year-long key from `claude setup-token`
   [ "$SERVER" = 1 ] && { [ -s "$TOKEN_FILE" ] || grep -q '^CLAUDE_CODE_OAUTH_TOKEN=.' "$DIR/.env" 2>/dev/null; }
 }
 
+login_with_qr() {   # server: `claude setup-token` in a hidden, very wide tmux window, so nothing has to be copied
+  # out of a (browser) terminal. Returns 1 only if no link appeared; the caller then uses the manual way.
+  local tm="env -u TMUX tmux" url="" last="" code key=""
+  $tm kill-session -t claude-login 2>/dev/null
+  $tm new-session -d -s claude-login -x 1000 -y 50 'claude setup-token' || return 1
+  for _ in $(seq 60); do   # the link is complete once it stays the same for a second
+    sleep 1
+    last=$url
+    url=$($tm capture-pane -p -J -t claude-login 2>/dev/null | grep -o 'https://[^[:space:]]*' | head -1)
+    [ -n "$url" ] && [ "$url" = "$last" ] && break
+  done
+  if [ -z "$url" ] || [ "$url" != "$last" ]; then $tm kill-session -t claude-login 2>/dev/null; return 1; fi
+  info "What happens now:"
+  info "  1. Scan the code below with your phone, or click the link under it, and log in with your Claude account."
+  info "  2. Click Authorize and copy the code it shows."
+  printf '\n'
+  command -v qrencode >/dev/null && qrencode -t ANSIUTF8 -m 2 -l L "$url"
+  printf '   %s\n' "$url"
+  printf '\n   Paste the code from the browser and press Enter: '
+  read -r code </dev/tty
+  code=$(printf '%s' "$code" | tr -d '[:space:]')
+  $tm send-keys -t claude-login -l "$code" && $tm send-keys -t claude-login Enter
+  for _ in $(seq 30); do
+    sleep 1
+    key=$($tm capture-pane -p -J -t claude-login 2>/dev/null | grep -o 'sk-ant-oat01-[A-Za-z0-9_-]*' | head -1)
+    [ -n "$key" ] && break
+    $tm capture-pane -p -J -t claude-login 2>/dev/null | grep -qi error && break
+  done
+  $tm kill-session -t claude-login 2>/dev/null
+  if [ -n "$key" ]; then
+    mkdir -p "$(dirname "$TOKEN_FILE")"; (umask 077; printf '%s\n' "$key" > "$TOKEN_FILE")
+    info "Claude is connected. This server can use it for a year."
+  else
+    info "That code did not work. Let's try again with a new link."
+  fi
+}
+
 main() {
   set -Eeuo pipefail
   local SERVER=0 LOGIN NAME n
@@ -265,6 +302,11 @@ main() {
     curl -fsSL https://tailscale.com/install.sh | sh >/dev/null 2>&1
     command -v tailscale >/dev/null || fail "Tailscale did not install."
   fi
+  if [ "$SERVER" = 1 ] && command -v apt-get >/dev/null && ! { command -v tmux >/dev/null && command -v qrencode >/dev/null; }; then
+    STEP="installing tmux and qrencode"   # for the Claude login in step 4; without them it falls back to copying
+    sudo apt-get update -qq </dev/tty >/dev/null \
+      && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq tmux qrencode </dev/tty >/dev/null 2>&1 || true
+  fi
   if [ "$SERVER" = 1 ] && [ "$ARCH" = amd64 ] && ! has_browser; then
     STEP="installing the browser"
     install_browser
@@ -290,6 +332,7 @@ main() {
   n=0
   until has_claude_login; do
     n=$((n + 1)); [ "$n" -le 3 ] || fail "Claude login did not finish."
+    [ "$SERVER" = 1 ] && command -v tmux >/dev/null && login_with_qr && continue
     info "What happens now:"
     if [ "$SERVER" = 1 ]; then
       info "  1. A long link appears, over several lines. Copy all of its lines, open it on your phone or laptop"
