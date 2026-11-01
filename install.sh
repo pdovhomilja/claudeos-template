@@ -188,12 +188,11 @@ login_with_qr() {   # server: `claude setup-token` in a hidden, very wide tmux w
   done
   if [ -z "$url" ] || [ "$url" != "$last" ]; then $tm kill-server 2>/dev/null; return 1; fi
   info "What happens now:"
-  info "  1. Scan the code below with your phone, or click the link under it, and log in with your Claude account."
+  info "  1. Click the link below, or scan the code under it with your phone, and log in with your Claude account."
   info "  2. Click Authorize and copy the code it shows."
-  printf '\n'
-  command -v qrencode >/dev/null && qrencode -t ANSIUTF8 -m 2 -l L "$url"
-  printf '   %s\n' "$url"
-  printf '\n   Paste the code from the browser and press Enter: '
+  printf '\n   %s\n' "$url"
+  command -v qrencode >/dev/null && qrencode -t ANSIUTF8 -m 1 -l L "$url"   # link above, prompt right under: QR + prompt fit 35 rows
+  printf '   Paste the code from the browser and press Enter: '
   read -r code </dev/tty
   code=$(printf '%s' "$code" | tr -d '[:space:]')
   $tm send-keys -t claude-login -l "$code" && $tm send-keys -t claude-login Enter

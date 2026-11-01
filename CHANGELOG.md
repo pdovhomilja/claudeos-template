@@ -6,9 +6,9 @@ A line starting with **After updating:** is something the assistant does once af
 Releasing (template maintainers): every merge to `main` is a release. Bump `VERSION`, add a section at the top
 (`## X.Y.Z — YYYY-MM-DD`), merge, then tag `main` as `vX.Y.Z` and push the tag.
 
-## 1.10.0 — 2026-10-31
+## 1.10.0 — 2026-11-01
 
-- Server install, step 4 (Connect Claude): nothing has to be copied out of the terminal any more. The installer shows a QR code and the login link on one line (scan it with your phone or click it), you paste back only the short code from the browser, and it saves the year-long key by itself without showing it. This makes the login work in a terminal in the browser, where copying a link over several lines and the long key failed. It needs `tmux` and `qrencode`, which the installer now adds on servers with apt; without `tmux`, or if no link appears, it falls back to the old way.
+- Server install, step 4 (Connect Claude): nothing has to be copied out of the terminal any more. The installer shows the login link on one line and a QR code under it, sized so the code and the prompt fit a 35-row browser terminal (click the link or scan the code with your phone), you paste back only the short code from the browser, and it saves the year-long key by itself without showing it. This makes the login work in a terminal in the browser, where copying a link over several lines and the long key failed. It needs `tmux` and `qrencode`, which the installer now adds on servers with apt; without `tmux`, or if no link appears, it falls back to the old way.
 - `scripts/test-install-login.sh` tests this login against a fake `claude` (needs tmux).
 
 ## 1.9.0 — 2026-10-26
