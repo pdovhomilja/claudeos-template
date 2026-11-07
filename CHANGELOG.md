@@ -6,6 +6,11 @@ A line starting with **After updating:** is something the assistant does once af
 Releasing (template maintainers): every merge to `main` is a release. Bump `VERSION`, add a section at the top
 (`## X.Y.Z — YYYY-MM-DD`), merge, then tag `main` as `vX.Y.Z` and push the tag.
 
+## 1.10.1 — 2026-11-07
+
+- The context-mode plugin has a big new version (2.x). New installs get it anyway; copies installed earlier stay on 1.x, whose database module can break after a Node.js update. Nothing else changes.
+- **After updating:** run `/ctx-upgrade` (or say "ctx upgrade") and follow what it prints. Then check `~/.claude/plugins/cache/context-mode/context-mode/<newest version>/hooks/hooks.json`: if its commands still point to an older version folder (seen on a Mac after 1.0.169 → 2.1.5), replace that old folder name with the newest one in that file, so the new hooks run. Tell the owner to restart Claude Code.
+
 ## 1.10.0 — 2026-11-01
 
 - Server install, step 4 (Connect Claude): nothing has to be copied out of the terminal any more. The installer shows the login link on one line and a QR code under it, sized so the code and the prompt fit a 35-row browser terminal (click the link or scan the code with your phone), you paste back only the short code from the browser, and it saves the year-long key by itself without showing it. This makes the login work in a terminal in the browser, where copying a link over several lines and the long key failed. It needs `tmux` and `qrencode`, which the installer now adds on servers with apt; without `tmux`, or if no link appears, it falls back to the old way.
