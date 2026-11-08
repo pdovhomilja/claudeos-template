@@ -93,8 +93,8 @@ has_plugins() {
   case "$list" in *last30days@last30days-skill*) ;; *) return 1 ;; esac
   case "$list" in *typesafe@typesafe-ai*) ;; *) return 1 ;; esac
 }
-has_node() {   # context-mode's server runs on Node.js 22.5 or newer
-  command -v node >/dev/null && node -e 'const [a,b]=process.versions.node.split(".").map(Number); process.exit(a>22||(a==22&&b>=5)?0:1)'
+has_node() {   # context-mode 2.x needs Node.js 24.15 or newer (its "engines"); on an older one its hook blocks every Bash call
+  command -v node >/dev/null && node -e 'const [a,b]=process.versions.node.split(".").map(Number); process.exit(a>24||(a==24&&b>=15)?0:1)'
 }
 
 download_node() {   # Node.js LTS into ~/.local/node, linked into ~/.local/bin
