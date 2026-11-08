@@ -27,9 +27,9 @@ for l in open(".env"):
 git add -A wiki raw staging >/dev/null 2>&1; git commit -qm "twin: leftovers before $MODE run $STAMP" >/dev/null 2>&1 || true
 flock .git/pull.lock git pull --rebase -q origin main >> "$LOG" 2>&1
 
-# Search index (CLAUDE.md § Search): keywords now, vectors for changed files in the background at low priority.
-# systemd stops a still-running embed when the run ends; the next run carries on (qmd's lock lets only one run at a time).
-qmd update >/dev/null 2>&1 && { nice -n 15 qmd embed >/dev/null 2>&1 </dev/null & }
+# Search index (CLAUDE.md § Search): keywords now, the rest in the background at low priority, one job at a time.
+# systemd stops a job still running when the run ends; the next run carries on.
+bash scripts/qmd-refresh.sh >/dev/null 2>&1 || true
 
 # Briefs live in month folders (wiki/twin/YYYY-MM/). Set below the pull, so edits never shift the bytes bash already read.
 BRIEF=""; IMPROVE=""
@@ -53,7 +53,7 @@ $REPLIES"
 # MCP servers added with `claude mcp add -s user` load automatically; add their tools to --allowedTools.
 claude -p "$PROMPT" \
   --permission-mode acceptEdits \
-  --allowedTools "Read,Write,Edit,Glob,Grep,WebSearch,WebFetch,Bash(git status:*),Bash(git log:*),Bash(git diff:*),Bash(git add:*),Bash(git commit:*),Bash(ls:*),Bash(cat:*),Bash(head:*),Bash(tail:*),Bash(wc:*),Bash(find:*),Bash(grep:*),Bash(date:*),Bash(python3 scripts/twin/send-draft.py:*),Bash(python3 scripts/twin/drafts.py post:*),Bash(python3 scripts/twin/drafts.py repost:*),Bash(python3 scripts/twin/drafts.py pending),Bash(python3 scripts/twin/mailbox.py list),Bash(python3 scripts/twin/mailbox.py read:*),Bash(python3 scripts/twin/discord.py post-text:*),Bash(bash scripts/qmd-refresh.sh),Bash(qmd update:*),Bash(qmd embed:*),Bash(qmd search:*),Bash(qmd vsearch:*),mcp__qmd__query,mcp__qmd__get,mcp__qmd__multi_get,mcp__qmd__status" \
+  --allowedTools "Read,Write,Edit,Glob,Grep,WebSearch,WebFetch,Bash(git status:*),Bash(git log:*),Bash(git diff:*),Bash(git add:*),Bash(git commit:*),Bash(ls:*),Bash(cat:*),Bash(head:*),Bash(tail:*),Bash(wc:*),Bash(find:*),Bash(grep:*),Bash(date:*),Bash(python3 scripts/twin/send-draft.py:*),Bash(python3 scripts/twin/drafts.py post:*),Bash(python3 scripts/twin/drafts.py repost:*),Bash(python3 scripts/twin/drafts.py pending),Bash(python3 scripts/twin/mailbox.py list),Bash(python3 scripts/twin/mailbox.py read:*),Bash(python3 scripts/twin/discord.py post-text:*),Bash(bash scripts/qmd-refresh.sh),Bash(qmd search:*),Bash(qmd vsearch:*),mcp__qmd__query,mcp__qmd__get,mcp__qmd__multi_get,mcp__qmd__status" \
   --disallowedTools "Bash(git push:*),Bash(python3 scripts/send-mail.py:*)" \
   --model claude-opus-5-5 \
   --max-turns 200 \
