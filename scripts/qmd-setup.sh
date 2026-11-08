@@ -50,6 +50,17 @@ if [ -f "$HOME/.config/systemd/user/claudeos-twin.service" ]; then
   systemctl --user enable qmd.service
   systemctl --user restart qmd.service
   claude mcp get qmd >/dev/null 2>&1 || claude mcp add -s user --transport http qmd http://localhost:8181/mcp >/dev/null
+  # Claude Code 2.1.319 waits 25 s after qmd 2.8.3 refuses its server/discover, so short runs start without search. An undocumented setting; it can go once they no longer need it.
+  node -e '
+    const fs = require("fs"), f = process.argv[1], isObject = (v) => v && typeof v === "object" && !Array.isArray(v);
+    const s = fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, "utf8")) : {};
+    if (!isObject(s) || (s.env !== undefined && !isObject(s.env))) process.exit(1);
+    if (s.env && "MCP_PROTOCOL_NEGOTIATION" in s.env) process.exit(0);
+    s.env = { ...s.env, MCP_PROTOCOL_NEGOTIATION: "legacy" };
+    fs.mkdirSync(require("path").dirname(f), { recursive: true });
+    fs.writeFileSync(f, JSON.stringify(s, null, 2) + "\n");
+  ' "$HOME/.claude/settings.json" 2>/dev/null \
+    || echo "Could not update ~/.claude/settings.json (left as it is): fix the file, run this script again or add \"env\": {\"MCP_PROTOCOL_NEGOTIATION\": \"legacy\"} yourself, or search takes 25 s to load in Claude Code."
   up=""
   for _ in $(seq "${QMD_HEALTH_TRIES:-30}"); do curl -fsS -m 2 http://localhost:8181/health >/dev/null 2>&1 && { up=1; break; }; sleep 1; done
   if [ -z "$up" ]; then   # enable and restart succeed even when the service crash-loops

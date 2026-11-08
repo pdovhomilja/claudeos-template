@@ -49,6 +49,7 @@ as 'bash ~/claudeos/scripts/qmd-setup.sh' && ok "setup returns" || bad "setup re
 as 'systemctl --user is-active qmd.service' | grep -qx active && ok "service is active" || { bad "service is active"; as 'systemctl --user status qmd.service --no-pager; journalctl --user -u qmd.service --no-pager | tail -20'; }
 docker exec "$C" loginctl show-user tester -p Linger | grep -q yes && ok "linger is on (the setup turned it on)" || bad "linger is on"
 as 'claude mcp list 2>&1' | grep -E '^qmd:.*localhost:8181' && ok "user MCP server qmd" || bad "user MCP server qmd"
+as 'grep -q "\"MCP_PROTOCOL_NEGOTIATION\": \"legacy\"" ~/.claude/settings.json' && ok "Claude Code setting for a fast MCP connect" || bad "Claude Code setting for a fast MCP connect"
 
 for _ in $(seq 30); do docker exec "$C" ss -ltn | grep -q ':8181 ' && break; sleep 1; done
 docker exec "$C" ss -ltn | grep ':8181 '

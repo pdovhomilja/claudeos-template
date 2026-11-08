@@ -128,6 +128,61 @@ FAKE_LINGER=yes setup "$h"; wait_bg "$h"
 hasnt "linger not asked for again" "enable-linger" "$h/calls"
 hasnt "MCP server not added twice" "claude mcp add" "$h/calls"
 
+echo "# Claude Code's MCP setting in ~/.claude/settings.json (server only)"
+same() { if cmp -s "$2" "$3"; then ok "$1"; else bad "$1"; diff "$2" "$3" | sed 's/^/     /'; fi; }
+# $1 = what the settings file holds before the run. Prints the home; the run's exit code goes to $h/rc.
+with_settings() {
+  local h; h=$(new_home "$2"); mkdir -p "$h/.claude"; printf '%s' "$1" > "$h/.claude/settings.json"; cp "$h/.claude/settings.json" "$h/before.json"
+  setup "$h"; echo $? > "$h/rc"; wait_bg "$h"; echo "$h"
+}
+h=$(new_home server)
+setup "$h"; rc=$?; wait_bg "$h"
+printf '{\n  "env": {\n    "MCP_PROTOCOL_NEGOTIATION": "legacy"\n  }\n}\n' > "$T/want.json"
+same "no settings file: created with the setting" "$T/want.json" "$h/.claude/settings.json"
+setup "$h"; wait_bg "$h"
+same "run again: file identical" "$T/want.json" "$h/.claude/settings.json"
+
+h=$(with_settings '{"model":"opus","env":{"FOO":"bar"},"permissions":{"allow":["Bash(ls:*)"]}}' server)
+cat > "$T/want.json" <<'JSON'
+{
+  "model": "opus",
+  "env": {
+    "FOO": "bar",
+    "MCP_PROTOCOL_NEGOTIATION": "legacy"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)"
+    ]
+  }
+}
+JSON
+same "other keys kept, setting added" "$T/want.json" "$h/.claude/settings.json"
+
+h=$(with_settings '{"model":"opus"}' server)
+printf '{\n  "model": "opus",\n  "env": {\n    "MCP_PROTOCOL_NEGOTIATION": "legacy"\n  }\n}\n' > "$T/want.json"
+same "no env yet: env added" "$T/want.json" "$h/.claude/settings.json"
+
+h=$(with_settings '{"env":{"MCP_PROTOCOL_NEGOTIATION":"legacy"},   "x":1}' server)
+same "already there: not even reformatted" "$h/before.json" "$h/.claude/settings.json"
+
+h=$(with_settings '{"env":{"MCP_PROTOCOL_NEGOTIATION":"auto"}}' server)
+same "the owner's own value stays" "$h/before.json" "$h/.claude/settings.json"
+
+for broken in '{"model": "opus",' '[]' '{"env":"not an object"}'; do
+  h=$(with_settings "$broken" server)
+  same "not usable ($broken): left as it is" "$h/before.json" "$h/.claude/settings.json"
+  [ "$(cat "$h/rc")" = 0 ] && ok "not usable ($broken): setup exits 0" || { bad "not usable ($broken): setup exits 0"; cat "$h/out"; }
+  has "not usable ($broken): setup carried on" "Search is set up" "$h/out"
+  [ "$(grep -c 'settings.json' "$h/out")" = 1 ] && ok "not usable ($broken): one line says what to do" || { bad "not usable ($broken): one line says what to do"; cat "$h/out"; }
+done
+
+h=$(new_home laptop)
+setup "$h"; wait_bg "$h"
+[ ! -e "$h/.claude/settings.json" ] && ok "laptop: no settings file created" || bad "laptop: no settings file created"
+h=$(with_settings '{"model":"opus"}' laptop)
+same "laptop: settings file untouched" "$h/before.json" "$h/.claude/settings.json"
+
 echo "# a server whose service does not come up"
 h=$(new_home server)
 FAKE_SERVER_DOWN=1 setup "$h"; rc=$?; wait_bg "$h"
