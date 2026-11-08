@@ -6,6 +6,14 @@ A line starting with **After updating:** is something the assistant does once af
 Releasing (template maintainers): every merge to `main` is a release. Bump `VERSION`, add a section at the top
 (`## X.Y.Z — YYYY-MM-DD`), merge, then tag `main` as `vX.Y.Z` and push the tag.
 
+## 1.11.0 — 2026-11-08
+
+- Your assistant can now search everything in `wiki/` and `raw/` by meaning, in any language, not only by the exact words: `qmd`, a local search tool. Nothing leaves your computer. The knowledge graph (graphify) stays as it is; search sits beside it.
+- The installer adds `qmd` and sets up the search index. Its models (about 2.5 GB) download in the background, so a slow line does not hold up the install; keyword search works at once, search by meaning a little later. Each session refreshes the index in the background.
+- On a server, search also runs as a small service on the server itself (`qmd.service`, only reachable from that server), because the command alone takes about a minute per search there and the service about a second. The twin may use it.
+- `scripts/qmd-setup.sh` does all this and is safe to run again. `scripts/test-install-qmd.sh` tests it against fake tools; `scripts/test-qmd-real.sh` and `scripts/test-qmd-server.sh` test the real thing.
+- **After updating:** run `bash scripts/qmd-setup.sh` (Mac, Linux and servers alike; on a server it also sets up the service and the MCP server `qmd`). It needs Node.js 24.15 or newer, which the 1.10.2 step checks. If it prints a line about linger, tell the owner to run that one command. On a server, restart Claude Code so the `mcp__qmd__*` tools load. On Windows there is no script: run `npm install -g --ignore-scripts @tobilu/qmd`; if `%USERPROFILE%\.config\qmd\index.yml` does not exist, create it with the two lines `models:` and `  embed: hf:Qwen/Qwen3-Embedding-0.6B-GGUF/Qwen3-Embedding-0.6B-Q8_0.gguf`; then in this folder `qmd collection add wiki --name wiki --mask "**/*.md"`, `qmd collection add raw --name raw --mask "**/*.{md,txt}"`, `qmd update`, and `qmd embed` in the background. Tell the owner in one sentence that the search models are downloading in the background (about 2.5 GB) and that with a lot of material on a server without a graphics card the first indexing can take hours; it carries on by itself at each session.
+
 ## 1.10.2 — 2026-11-08
 
 - The installer now asks for Node.js 24.15 or newer, because context-mode 2.x needs it. On an older Node.js its hook stops every terminal command in Claude Code. A computer with an older Node.js (for example 22.x) now gets Node.js 24 in your home folder, like a computer without one.
