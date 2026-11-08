@@ -37,6 +37,9 @@ cp "$DIR"/scripts/vm/systemd/* ~/.config/systemd/user/
 sudo loginctl enable-linger "$USER"
 systemctl --user daemon-reload
 
+echo "== search"
+bash "$DIR/scripts/qmd-setup.sh" || echo "(Search is not set up yet; run: bash $DIR/scripts/qmd-setup.sh)"
+
 if command -v google-chrome >/dev/null && command -v tigervncserver >/dev/null; then
   echo "== browser desktop"
   VNC="$HOME/.config/tigervnc"; mkdir -p "$VNC"; chmod 700 "$VNC"

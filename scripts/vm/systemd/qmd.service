@@ -1,0 +1,15 @@
+[Unit]
+Description=qmd search server (MCP over HTTP, localhost:8181)
+After=network.target
+
+[Service]
+WorkingDirectory=%h/claudeos
+# qmd starts through `env node`; a user service's PATH does not have ~/.local/bin, where the installer puts Node.js
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=%h/.local/bin/qmd mcp --http --port 8181
+Restart=on-failure
+RestartSec=10
+Nice=10
+
+[Install]
+WantedBy=default.target
