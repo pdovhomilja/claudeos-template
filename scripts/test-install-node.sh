@@ -24,7 +24,7 @@ fake_node() {   # $1 = version, $2 = folder
 }
 
 echo "# has_node: context-mode 2.x needs Node.js 24.15 or newer"
-for c in 18.19.1=rejected 22.5.0=rejected 22.23.0=rejected 24.14.0=rejected 24.15.0=accepted 24.22.2=accepted 25.1.0=accepted; do
+for c in 18.19.1=rejected 22.5.0=rejected 22.23.0=rejected 24.14.0=rejected 24.9.0=rejected 24.15.0=accepted 24.22.2=accepted 25.1.0=accepted 30.0.0=accepted; do
   v=${c%=*} want=${c#*=}
   fake_node "$v" "$T/node-$v"
   if PATH="$T/node-$v:$PATH" has_node; then got=accepted; else got=rejected; fi

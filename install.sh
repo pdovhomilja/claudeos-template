@@ -54,14 +54,14 @@ install_obsidian() {   # macOS only; the wiki is easiest to read in Obsidian
 }
 
 add_path_to_profile() {   # so a new Terminal window finds the tools in ~/.local/bin
-  local f
+  local f line='export PATH="$HOME/.local/bin:$PATH"'
   case "$(basename "${SHELL:-bash}")" in
     zsh) f="$HOME/.zshrc" ;;
     bash) if [ "$OS" = Darwin ]; then f="$HOME/.bash_profile"; else f="$HOME/.bashrc"; fi ;;
     *) f="$HOME/.profile" ;;
   esac
   # our exact line: a "$PATH:…/.local/bin" (e.g. from pipx) would put an older system node first
-  grep -qsF 'export PATH="$HOME/.local/bin:$PATH"' "$f" || printf '\nexport PATH="$HOME/.local/bin:$PATH"\n' >> "$f"
+  grep -qsF "$line" "$f" || printf '\n%s\n' "$line" >> "$f"
 }
 
 is_claudeos_repo() {   # $1 = owner/name; true only if GitHub says it was created from the template (an earlier run).
