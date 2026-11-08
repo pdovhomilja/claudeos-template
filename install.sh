@@ -60,7 +60,8 @@ add_path_to_profile() {   # so a new Terminal window finds the tools in ~/.local
     bash) if [ "$OS" = Darwin ]; then f="$HOME/.bash_profile"; else f="$HOME/.bashrc"; fi ;;
     *) f="$HOME/.profile" ;;
   esac
-  grep -qs 'local/bin' "$f" || printf '\nexport PATH="$HOME/.local/bin:$PATH"\n' >> "$f"
+  # our exact line: a "$PATH:…/.local/bin" (e.g. from pipx) would put an older system node first
+  grep -qsF 'export PATH="$HOME/.local/bin:$PATH"' "$f" || printf '\nexport PATH="$HOME/.local/bin:$PATH"\n' >> "$f"
 }
 
 is_claudeos_repo() {   # $1 = owner/name; true only if GitHub says it was created from the template (an earlier run).
