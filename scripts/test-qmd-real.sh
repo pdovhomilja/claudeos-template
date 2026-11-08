@@ -79,6 +79,29 @@ for _ in $(seq 240); do grep -qE '^(done|stopped)' "$H/claudeos/runs/qmd-embed.l
 tail -1 "$H/claudeos/runs/qmd-embed.log" | grep -q '^done' && ok "refresh finished" || { bad "refresh finished"; tail -5 "$H/claudeos/runs/qmd-embed.log"; }
 ls "$H"/.cache/qmd/models/*query-expansion*.gguf >/dev/null 2>&1 && ok "query model is back" || bad "query model is back"
 qmd status | grep -q Pending && bad "nothing pending" || ok "nothing pending"
+
+echo "# no network (a dead proxy for curl and Node.js): nothing deleted, the job ends"
+MODELS="$H/.cache/qmd/models"
+inodes() { ls -i "$MODELS"/*.gguf | sed 's/^ *//'; }
+offline() { HTTPS_PROXY=http://127.0.0.1:9 NODE_USE_ENV_PROXY=1 "$@"; }
+job_ended() { for _ in $(seq "$1"); do kill -0 "$(cat "$H/claudeos/runs/qmd-embed.pid")" 2>/dev/null || return 0; sleep 1; done; return 1; }
+inodes > "$H/inodes"
+printf '# Allotment\nPlant the broad beans in late autumn.\n' > "$H/claudeos/wiki/allotment.md"
+offline bash "$H/claudeos/scripts/qmd-refresh.sh"; job_ended 240 && ok "offline, nothing missing: job ends" || bad "offline, nothing missing: job ends"
+inodes | cmp -s - "$H/inodes" && ok "offline, nothing missing: every model is the same file" || { bad "offline, nothing missing: every model is the same file"; inodes; }
+tail -1 "$H/claudeos/runs/qmd-embed.log" | grep -q '^done' && ok "offline, nothing missing: done" || { bad "offline, nothing missing: done"; tail -5 "$H/claudeos/runs/qmd-embed.log"; }
+qmd status | grep -q Pending && bad "offline: new file embedded" || ok "offline: new file embedded"
+Q=$(ls "$MODELS"/*query-expansion*.gguf); mv "$Q" "$H/kept-query.gguf"; inodes > "$H/inodes"
+offline bash "$H/claudeos/scripts/qmd-refresh.sh"; job_ended 240 && ok "offline, query model missing: job ends" || bad "offline, query model missing: job ends"
+inodes | cmp -s - "$H/inodes" && ok "offline, query model missing: the others are the same files" || { bad "offline, query model missing: the others are the same files"; inodes; }
+tail -1 "$H/claudeos/runs/qmd-embed.log" | grep -q '^stopped' && ok "offline, query model missing: says stopped" || bad "offline, query model missing: says stopped"
+E=$(ls "$MODELS"/*Qwen3-Embedding*.gguf); mv "$E" "$H/kept-embed.gguf"; inodes > "$H/inodes"
+offline bash "$H/claudeos/scripts/qmd-refresh.sh"; job_ended 60 && ok "offline, embed model missing: job ends" || bad "offline, embed model missing: job ends"
+inodes | cmp -s - "$H/inodes" && ok "offline, embed model missing: the other is the same file" || { bad "offline, embed model missing: the other is the same file"; inodes; }
+mv "$H/kept-query.gguf" "$Q"; mv "$H/kept-embed.gguf" "$E"; inodes > "$H/inodes"
+echo "# online again, nothing missing: no model is touched"
+bash "$H/claudeos/scripts/qmd-refresh.sh"; job_ended 240 && ok "online, nothing missing: job ends" || bad "online, nothing missing: job ends"
+inodes | cmp -s - "$H/inodes" && ok "online, nothing missing: every model is the same file" || { bad "online, nothing missing: every model is the same file"; inodes; }
 t=$(date +%s); bash "$H/claudeos/scripts/qmd-refresh.sh" >/dev/null; for _ in $(seq 60); do grep -qE '^(done|stopped)' "$H/claudeos/runs/qmd-embed.log" && break; sleep 1; done; echo "   refresh with nothing to do: $(( $(date +%s) - t ))s"
 
 exit $FAILED
