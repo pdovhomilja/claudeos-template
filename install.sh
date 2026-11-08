@@ -54,13 +54,14 @@ install_obsidian() {   # macOS only; the wiki is easiest to read in Obsidian
 }
 
 add_path_to_profile() {   # so a new Terminal window finds the tools in ~/.local/bin
-  local f
+  local f line='export PATH="$HOME/.local/bin:$PATH"'
   case "$(basename "${SHELL:-bash}")" in
     zsh) f="$HOME/.zshrc" ;;
     bash) if [ "$OS" = Darwin ]; then f="$HOME/.bash_profile"; else f="$HOME/.bashrc"; fi ;;
     *) f="$HOME/.profile" ;;
   esac
-  grep -qs 'local/bin' "$f" || printf '\nexport PATH="$HOME/.local/bin:$PATH"\n' >> "$f"
+  # our exact line: a "$PATH:…/.local/bin" (e.g. from pipx) would put an older system node first
+  grep -qsF "$line" "$f" || printf '\n%s\n' "$line" >> "$f"
 }
 
 is_claudeos_repo() {   # $1 = owner/name; true only if GitHub says it was created from the template (an earlier run).
@@ -93,8 +94,8 @@ has_plugins() {
   case "$list" in *last30days@last30days-skill*) ;; *) return 1 ;; esac
   case "$list" in *typesafe@typesafe-ai*) ;; *) return 1 ;; esac
 }
-has_node() {   # context-mode's server runs on Node.js 22.5 or newer
-  command -v node >/dev/null && node -e 'const [a,b]=process.versions.node.split(".").map(Number); process.exit(a>22||(a==22&&b>=5)?0:1)'
+has_node() {   # context-mode 2.x needs Node.js 24.15 or newer (its "engines"); on an older one its hook blocks every Bash call
+  command -v node >/dev/null && node -e 'const [a,b]=process.versions.node.split(".").map(Number); process.exit(a>24||(a==24&&b>=15)?0:1)'
 }
 
 download_node() {   # Node.js LTS into ~/.local/node, linked into ~/.local/bin

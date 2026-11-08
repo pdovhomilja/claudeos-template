@@ -6,6 +6,13 @@ A line starting with **After updating:** is something the assistant does once af
 Releasing (template maintainers): every merge to `main` is a release. Bump `VERSION`, add a section at the top
 (`## X.Y.Z — YYYY-MM-DD`), merge, then tag `main` as `vX.Y.Z` and push the tag.
 
+## 1.10.2 — 2026-11-08
+
+- The installer now asks for Node.js 24.15 or newer, because context-mode 2.x needs it. On an older Node.js its hook stops every terminal command in Claude Code. A computer with an older Node.js (for example 22.x) now gets Node.js 24 in your home folder, like a computer without one.
+- New terminal windows find that Node.js first, also when your shell profile already added `~/.local/bin` at the end of PATH (pipx does this).
+- `scripts/test-install-node.sh` tests both.
+- **After updating:** run `node -v` in a new terminal. If it shows a version older than v24.15, tell the owner to paste the install command again (it adds Node.js 24 and changes nothing else), then restart Claude Code. If the owner manages Node.js with nvm, Homebrew or asdf, its line in the shell profile still comes first; tell them to switch that manager to Node.js 24.15 or newer instead.
+
 ## 1.10.1 — 2026-11-07
 
 - The context-mode plugin has a big new version (2.x). New installs get it anyway; copies installed earlier stay on 1.x, whose database module can break after a Node.js update. Nothing else changes.
