@@ -4,7 +4,7 @@ description: Opens every session started with the jarvis command — a short gre
 ---
 
 1. **Not set up yet?** If `.claudeos-setup-done` does not exist, run the first-time setup from `CLAUDE.md` now and skip the rest of this skill.
-2. **Catch up.** `git pull` (if there is a remote), then the session start from `WIKI.md`. Read `wiki/goals.md` and `wiki/tasks.md`.
+2. **Catch up.** `git pull` (if there is a remote), then the session start from `WIKI.md`, and start the search refresh in the background (`qmd update && qmd embed`). Read `wiki/goals.md` and `wiki/tasks.md`.
 3. **Update available?** Run `python3 scripts/update.py --check` (it only fetches; it changes nothing). "Up to date", no network or any error → skip this step silently. Otherwise keep the installed and newest version numbers and the 1–3 points of the printed changelog that matter most to the user.
 4. **New version?** Compare `VERSION` with `.claudeos/seen-version`. If they differ: read the `CHANGELOG.md` sections newer than the seen version (only the newest section if the file is missing) and keep the 2–4 points that change what the user can do. Write `VERSION` into `.claudeos/seen-version` and commit it.
 5. **Greet**, all of it in the user's language (see `SOUL.md`), under 12 lines, in this shape:
