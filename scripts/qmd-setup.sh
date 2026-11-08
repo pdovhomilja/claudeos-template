@@ -38,6 +38,7 @@ if [ -f "$HOME/.config/systemd/user/claudeos-twin.service" ]; then
   cp "$ROOT/scripts/vm/systemd/qmd.service" "$HOME/.config/systemd/user/"
   loginctl show-user "$(id -un)" -p Linger 2>/dev/null | grep -q yes || sudo -n loginctl enable-linger "$(id -un)" \
     || echo "Could not turn on linger: run  sudo loginctl enable-linger $(id -un)  or search stops at logout."
+  for _ in $(seq 20); do systemctl --user show-environment >/dev/null 2>&1 && break; sleep 1; done   # linger starts the user's systemd a moment later
   systemctl --user daemon-reload
   systemctl --user enable --now qmd.service
   claude mcp get qmd >/dev/null 2>&1 || claude mcp add -s user --transport http qmd http://localhost:8181/mcp >/dev/null
