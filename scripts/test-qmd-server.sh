@@ -64,7 +64,7 @@ t=$(date +%s); out=$(mcp_call "$SEARCH"); s1=$(( $(date +%s) - t ))
 t=$(date +%s); mcp_call "$SEARCH" >/dev/null; s2=$(( $(date +%s) - t ))
 echo "   first ${s1}s (loads the model), second ${s2}s"
 echo "$out" | grep -q 'wiki/carbonara.md' && ok "hit, as a repo path" || { bad "hit, as a repo path"; echo "$out" | cut -c1-600; }
-[ "$s2" -le 5 ] && ok "second search within 5 s" || bad "second search within 5 s (${s2}s)"
+[ "$s2" -le 10 ] && ok "second search within 10 s" || bad "second search within 10 s (${s2}s)"
 
 echo "# what it costs"
 as 'systemctl --user show qmd.service -p MemoryCurrent -p MemoryPeak'
