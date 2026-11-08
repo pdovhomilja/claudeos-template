@@ -14,14 +14,14 @@ trap cleanup EXIT
 
 docker build -q -t qmd-server-test - >/dev/null <<'DOCKERFILE' || exit 1
 FROM ubuntu:24.04
-RUN apt-get update -qq && apt-get install -y -qq systemd systemd-sysv dbus dbus-user-session libpam-systemd sudo curl ca-certificates iproute2 procps python3 >/dev/null 2>&1
+RUN apt-get update -qq && apt-get install -y -qq systemd systemd-sysv dbus libpam-systemd sudo curl ca-certificates iproute2 procps python3 >/dev/null 2>&1
 RUN useradd -m -s /bin/bash jarvis && echo 'jarvis ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/jarvis
 CMD ["/lib/systemd/systemd"]
 DOCKERFILE
 docker run -d --name "$C" --privileged --cgroupns=host -v "$ROOT:/w:ro" --tmpfs /run --tmpfs /run/lock qmd-server-test >/dev/null || exit 1
 for _ in $(seq 30); do docker exec "$C" systemctl is-system-running 2>/dev/null | grep -qE 'running|degraded' && break; sleep 1; done
 
-as() { docker exec -i -u jarvis -e HOME=/home/jarvis -e XDG_RUNTIME_DIR=/run/user/1000 -w /home/jarvis "$C" bash -l -c "export PATH=\$HOME/.local/bin:\$PATH; $1"; }
+as() { docker exec -i -u jarvis -e HOME=/home/jarvis -w /home/jarvis "$C" bash -l -c "export XDG_RUNTIME_DIR=/run/user/\$(id -u) PATH=\$HOME/.local/bin:\$PATH; $1"; }
 # One MCP tool call over HTTP, as Claude Code makes it. $1 = tool arguments as JSON
 mcp_call() {
   as "cat > /tmp/mcp.sh; bash /tmp/mcp.sh" <<EOF
