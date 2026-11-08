@@ -53,7 +53,7 @@ $REPLIES"
 # MCP servers added with `claude mcp add -s user` load automatically; add their tools to --allowedTools.
 claude -p "$PROMPT" \
   --permission-mode acceptEdits \
-  --allowedTools "Read,Write,Edit,Glob,Grep,WebSearch,WebFetch,Bash(git status:*),Bash(git log:*),Bash(git diff:*),Bash(git add:*),Bash(git commit:*),Bash(ls:*),Bash(cat:*),Bash(head:*),Bash(tail:*),Bash(wc:*),Bash(find:*),Bash(grep:*),Bash(date:*),Bash(python3 scripts/twin/send-draft.py:*),Bash(python3 scripts/twin/drafts.py post:*),Bash(python3 scripts/twin/drafts.py repost:*),Bash(python3 scripts/twin/drafts.py pending),Bash(python3 scripts/twin/mailbox.py list),Bash(python3 scripts/twin/mailbox.py read:*),Bash(python3 scripts/twin/discord.py post-text:*),Bash(qmd update:*),Bash(qmd embed:*),Bash(qmd search:*),Bash(qmd vsearch:*),mcp__qmd__query,mcp__qmd__get,mcp__qmd__multi_get,mcp__qmd__status" \
+  --allowedTools "Read,Write,Edit,Glob,Grep,WebSearch,WebFetch,Bash(git status:*),Bash(git log:*),Bash(git diff:*),Bash(git add:*),Bash(git commit:*),Bash(ls:*),Bash(cat:*),Bash(head:*),Bash(tail:*),Bash(wc:*),Bash(find:*),Bash(grep:*),Bash(date:*),Bash(python3 scripts/twin/send-draft.py:*),Bash(python3 scripts/twin/drafts.py post:*),Bash(python3 scripts/twin/drafts.py repost:*),Bash(python3 scripts/twin/drafts.py pending),Bash(python3 scripts/twin/mailbox.py list),Bash(python3 scripts/twin/mailbox.py read:*),Bash(python3 scripts/twin/discord.py post-text:*),Bash(bash scripts/qmd-refresh.sh),Bash(qmd update:*),Bash(qmd embed:*),Bash(qmd search:*),Bash(qmd vsearch:*),mcp__qmd__query,mcp__qmd__get,mcp__qmd__multi_get,mcp__qmd__status" \
   --disallowedTools "Bash(git push:*),Bash(python3 scripts/send-mail.py:*)" \
   --model claude-opus-5-5 \
   --max-turns 200 \
@@ -73,6 +73,9 @@ elif [ -f "$BRIEF" ]; then
 else
   python3 scripts/twin/discord.py post-text "Twin $MODE run $STAMP finished without a brief. Log: $LOG" >> "$LOG" 2>&1
 fi
+# Search (CLAUDE.md § Search) missing or down must not stay silent: the qmd lines above fail quietly and the MCP tools just are not there.
+[ "$MODE" = night ] && ! { command -v qmd >/dev/null && systemctl --user is-active --quiet qmd.service; } && python3 scripts/twin/discord.py post-text \
+  "Search (qmd) is not working on the server ($(hostname)). In a terminal there: bash ~/claudeos/scripts/qmd-setup.sh" >> "$LOG" 2>&1
 # Claude login (/login) runs out ~28 days after login and refreshing does not extend it; warn 5 days ahead.
 LOGIN_DAYS=$(python3 -c 'import json,os,time; o=json.load(open(os.path.expanduser("~/.claude/.credentials.json")))["claudeAiOauth"]; print(int((o["refreshTokenExpiresAt"]/1000-time.time())//86400))' 2>/dev/null)
 [ "$MODE" = night ] && [ -z "${CLAUDE_CODE_OAUTH_TOKEN:-}" ] && [ -n "$LOGIN_DAYS" ] && [ "$LOGIN_DAYS" -lt 5 ] && python3 scripts/twin/discord.py post-text \

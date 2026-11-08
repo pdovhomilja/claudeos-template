@@ -15,32 +15,47 @@ node -e 'const [a,b]=process.versions.node.split(".").map(Number); process.exit(
 # (tree-sitter-javascript, whose linux-arm64 prebuild is really x86-64) is for grammars qmd reads as wasm.
 command -v qmd >/dev/null || npm install -g --prefix "$HOME/.local" --ignore-scripts @tobilu/qmd
 
-# Only into a new config: qmd rewrites this file in its own style, and an existing one holds someone's own choice.
+# A new config gets everything. An existing one keeps its model and paths: qmd rewrites that file in its own style, it
+# may hold someone's own choice, and `qmd collection add` is the only safe way in (it cannot ignore, so twin/ stays in there).
 CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/qmd/index.yml"
 if [ ! -f "$CONFIG" ]; then
   mkdir -p "$(dirname "$CONFIG")"
-  printf 'models:\n  embed: %s\n' "$EMBED_MODEL" > "$CONFIG"
+  cat > "$CONFIG" <<YAML
+models:
+  embed: $EMBED_MODEL
+collections:
+  wiki:
+    path: "$ROOT/wiki"
+    pattern: "**/*.md"
+    ignore:
+      - "twin/**"
+  raw:
+    path: "$ROOT/raw"
+    pattern: "**/*.{md,txt}"
+YAML
 fi
 qmd collection show wiki >/dev/null 2>&1 || qmd collection add "$ROOT/wiki" --name wiki --mask '**/*.md' >/dev/null
 qmd collection show raw >/dev/null 2>&1 || qmd collection add "$ROOT/raw" --name raw --mask '**/*.{md,txt}' >/dev/null
-qmd update >/dev/null
-
-# Embedding first, so vector search can start; then the query models (vsearch would otherwise fetch them in the foreground).
-# Only one embed runs at a time (qmd's own lock), and every session start carries on from wherever this one stopped.
-mkdir -p "$ROOT/runs"
-if ! kill -0 "$(cat "$ROOT/runs/qmd-first-embed.pid" 2>/dev/null)" 2>/dev/null; then   # a second job would download the same model and break the first
-  nohup sh -c 'if nice -n 10 qmd embed --timeout 0 && nice -n 10 qmd pull; then echo done; else echo "stopped: the next qmd embed carries on"; fi' \
-    > "$ROOT/runs/qmd-first-embed.log" 2>&1 < /dev/null &
-  echo $! > "$ROOT/runs/qmd-first-embed.pid"
-fi
+bash "$ROOT/scripts/qmd-refresh.sh"
 
 if [ -f "$HOME/.config/systemd/user/claudeos-twin.service" ]; then
-  cp "$ROOT/scripts/vm/systemd/qmd.service" "$HOME/.config/systemd/user/"
+  # Written with the qmd and node this machine really has (nvm, another prefix); a user service's PATH has neither.
+  sed -e "s|^ExecStart=[^ ]*|ExecStart=$(command -v qmd)|" \
+      -e "s|^Environment=PATH=.*|Environment=PATH=$(dirname "$(command -v node)"):$(dirname "$(command -v qmd)"):/usr/local/bin:/usr/bin:/bin|" \
+      "$ROOT/scripts/vm/systemd/qmd.service" > "$HOME/.config/systemd/user/qmd.service"
   loginctl show-user "$(id -un)" -p Linger 2>/dev/null | grep -q yes || sudo -n loginctl enable-linger "$(id -un)" \
     || echo "Could not turn on linger: run  sudo loginctl enable-linger $(id -un)  or search stops at logout."
   for _ in $(seq 20); do systemctl --user show-environment >/dev/null 2>&1 && break; sleep 1; done   # linger starts the user's systemd a moment later
   systemctl --user daemon-reload
-  systemctl --user enable --now qmd.service
+  systemctl --user enable qmd.service
+  systemctl --user restart qmd.service
   claude mcp get qmd >/dev/null 2>&1 || claude mcp add -s user --transport http qmd http://localhost:8181/mcp >/dev/null
+  up=""
+  for _ in $(seq "${QMD_HEALTH_TRIES:-30}"); do curl -fsS -m 2 http://localhost:8181/health >/dev/null 2>&1 && { up=1; break; }; sleep 1; done
+  if [ -z "$up" ]; then   # enable and restart succeed even when the service crash-loops
+    echo "qmd.service did not start. Its log:"
+    journalctl --user -u qmd.service -n 10 --no-pager || true
+    exit 1
+  fi
 fi
-echo "Search is set up. Keywords work now; the models download in the background (log: runs/qmd-first-embed.log)."
+echo "Search is set up. Keywords work now; the models download in the background (log: runs/qmd-embed.log)."

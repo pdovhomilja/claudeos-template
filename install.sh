@@ -112,8 +112,10 @@ download_node() {   # Node.js LTS into ~/.local/node, linked into ~/.local/bin
   hash -r   # bash may still remember an older system node from the checklist
 }
 
-install_qmd() {   # local search. --ignore-scripts: no compiler needed (scripts/qmd-setup.sh says why)
-  npm install -g --prefix "$HOME/.local" --ignore-scripts @tobilu/qmd
+install_qmd() {   # local search. --ignore-scripts: no compiler needed (scripts/qmd-setup.sh says why). Must not stop the install.
+  npm install -g --prefix "$HOME/.local" --ignore-scripts @tobilu/qmd >/dev/null 2>&1 \
+    || npm install -g --prefix "$HOME/.local" --ignore-scripts @tobilu/qmd \
+    || info "(qmd did not install, so search is not available yet; the rest goes on. Paste the install command again later, or: bash ~/claudeos/scripts/qmd-setup.sh)"
 }
 
 install_plugins() {   # one by one; a failed install is retried once with its error message shown
@@ -304,7 +306,7 @@ main() {
   STEP="installing graphify"
   command -v graphify >/dev/null || uv tool install -q graphifyy >/dev/null 2>&1 || uv tool install -q graphifyy
   STEP="installing qmd"
-  command -v qmd >/dev/null || install_qmd >/dev/null 2>&1 || install_qmd
+  command -v qmd >/dev/null || install_qmd
   if [ "$SERVER" = 1 ] && ! command -v tailscale >/dev/null; then
     STEP="installing Tailscale"
     curl -fsSL https://tailscale.com/install.sh | sh >/dev/null 2>&1

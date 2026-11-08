@@ -24,7 +24,7 @@ while true; do
     OPEN=$(echo "$MSGS" | tail -1 | grep -o '[0-9]\+')
     date +%s >> "$RUNS/discord-$c-runs.txt"
     echo "$(date '+%F %H:%M:%S') $c: $(echo "$MSGS" | grep -c '^- ') message(s), $OPEN open" >> "$LOG"
-    TOOLS="Read,Write,Edit,Glob,Grep,Bash(date:*),mcp__qmd__query,mcp__qmd__get,mcp__qmd__multi_get"
+    TOOLS="Read,Write,Edit,Glob,Grep,Bash(date:*),mcp__qmd__query,mcp__qmd__get,mcp__qmd__multi_get,mcp__qmd__status"
     [ -n "$extra" ] && TOOLS="$TOOLS,$extra"   # the channel's own extra tools (third column of discord-channels.txt)
     if [ "$OPEN" -gt 0 ]; then
       TOOLS="$TOOLS,Bash(python3 scripts/twin/discord.py chan-post:*)"
