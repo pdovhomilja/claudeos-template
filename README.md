@@ -55,7 +55,7 @@ A second copy of the assistant can work unattended on a small Linux server: two 
 Each person runs their own: own repo, own server, own Claude subscription, own Tailscale, own Discord bot. Never share a copy that holds someone else's wiki.
 
 1. Push your claudeOS repo to a **private** GitHub repo.
-2. Ubuntu 24.04 server, x86_64 (4 vCPU / 8 GB / 64 GB with the browser; 2 vCPU / 4 GB without), a user with sudo. Log in as that user and run:
+2. Ubuntu 24.04 server, x86_64 (4 vCPU / 8 GB / 64 GB with the browser; 2 vCPU / 4 GB without, which is tight while search is indexing), a user with sudo. Log in as that user and run:
    `curl -fsSL https://raw.githubusercontent.com/pdovhomilja/claudeos-template/main/install.sh | bash -s -- --server`
 3. It shows the checklist, installs Claude Code, Tailscale, uv, graphify, qmd and the browser, logs into **your** Claude account (`claude setup-token`: a key that lasts a year, saved in `.env`) and **your** GitHub (open `github.com/login/device` on your phone or laptop), clones your copy to `~/claudeos`, installs the systemd timers and starts the browser desktop. It prints what is left: `tailscale up`, the browser steps below, filling in `.env`, a test run, enabling the timers.
 4. Discord: create a server and a bot (Developer Portal → Bot → token; scopes `bot`, permissions Send Messages, Create Public Threads, Send Messages in Threads, Read Message History, Add Reactions; Message Content intent on), invite it to one private channel, put token, channel id and your user id in `.env`.
