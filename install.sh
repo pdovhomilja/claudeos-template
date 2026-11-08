@@ -112,6 +112,12 @@ download_node() {   # Node.js LTS into ~/.local/node, linked into ~/.local/bin
   hash -r   # bash may still remember an older system node from the checklist
 }
 
+install_qmd() {   # local search. --ignore-scripts: no compiler needed (scripts/qmd-setup.sh says why). Must not stop the install.
+  npm install -g --prefix "$HOME/.local" --ignore-scripts @tobilu/qmd >/dev/null 2>&1 \
+    || npm install -g --prefix "$HOME/.local" --ignore-scripts @tobilu/qmd \
+    || info "(qmd did not install, so search is not available yet; the rest goes on. Paste the install command again later, or: bash ~/claudeos/scripts/qmd-setup.sh)"
+}
+
 install_plugins() {   # one by one; a failed install is retried once with its error message shown
   local p
   for p in mksglu/context-mode=context-mode@context-mode \
@@ -148,6 +154,7 @@ preflight() {
   check "Claude Code" "command -v claude"
   check "uv" "command -v uv"
   check "graphify" "command -v graphify"
+  check "qmd" "command -v qmd"
   check "Claude Code plugins" has_plugins
   if [ "$SERVER" = 1 ]; then
     check "Tailscale" "command -v tailscale"
@@ -298,6 +305,8 @@ main() {
   command -v uv >/dev/null || curl -LsSf https://astral.sh/uv/install.sh | env UV_NO_MODIFY_PATH=1 sh >/dev/null 2>&1
   STEP="installing graphify"
   command -v graphify >/dev/null || uv tool install -q graphifyy >/dev/null 2>&1 || uv tool install -q graphifyy
+  STEP="installing qmd"
+  command -v qmd >/dev/null || install_qmd
   if [ "$SERVER" = 1 ] && ! command -v tailscale >/dev/null; then
     STEP="installing Tailscale"
     curl -fsSL https://tailscale.com/install.sh | sh >/dev/null 2>&1
@@ -429,6 +438,10 @@ main() {
     bash "$DIR/scripts/vm/bootstrap.sh" "$(git -C "$DIR" remote get-url origin)"
     exit 0
   fi
+
+  STEP="setting up search"   # must not stop the install; the script can run again at any time
+  [ ! -f "$DIR/scripts/qmd-setup.sh" ] || bash "$DIR/scripts/qmd-setup.sh" \
+    || info "(Search is not set up yet. Your assistant can finish it: bash scripts/qmd-setup.sh)"
 
   say "8/8 Meet your assistant"
   trap - ERR
