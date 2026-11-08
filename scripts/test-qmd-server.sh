@@ -66,7 +66,7 @@ echo "$out" | grep -q 'wiki/carbonara.md' && ok "hit, as a repo path" || { bad "
 [ "$s2" -le 5 ] && ok "second search within 5 s" || bad "second search within 5 s (${s2}s)"
 
 echo "# what it costs"
-as 'ps -o rss=,args= -C node | sort -rn | head -3 | cut -c1-70'
+as 'systemctl --user show qmd.service -p MemoryCurrent -p MemoryPeak'
 as 'du -sh ~/.cache/qmd/models ~/.local/lib/node_modules/@tobilu/qmd ~/.cache/qmd/index.sqlite'
 
 echo "# the machine restarts, nobody logs in"
