@@ -6,6 +6,13 @@ A line starting with **After updating:** is something the assistant does once af
 Releasing (template maintainers): every merge to `main` is a release. Bump `VERSION`, add a section at the top
 (`## X.Y.Z — YYYY-MM-DD`), merge, then tag `main` as `vX.Y.Z` and push the tag.
 
+## 1.12.0 — 2026-11-17
+
+- A mail draft can no longer promise an attachment it does not carry. If the text says "attached" (or "v příloze", "přikládám"…) and `attach:` is empty, the draft is posted in Discord with ⛔ instead of ✅ and `send-draft.py` refuses to send it. A ✅ added by hand gets one "not sent" reply and the draft stays open.
+- Work the twin cannot do on the server (a file or login only on your main computer) no longer turns into a reply written as if it were done. The twin sends at most a short holding reply with a date, keeps the real reply as a draft marked `needs_local:` (also blocked), and adds a row to the new page `wiki/topics/local-queue.md`. Your assistant reads that page first at the start of every session on your computer.
+- Fix: an empty frontmatter line such as `attach:` no longer takes the next line (`status: draft`) as its value.
+- **After updating:** if `wiki/topics/local-queue.md` does not exist, create it from the template's copy (fill in today's date).
+
 ## 1.11.0 — 2026-11-08
 
 - Your assistant can now search everything in `wiki/` and `raw/` by meaning, in any language, not only by the exact words: `qmd`, a local search tool. Nothing leaves your computer. The knowledge graph (graphify) stays as it is; search sits beside it.
