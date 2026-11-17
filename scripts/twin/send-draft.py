@@ -2,7 +2,8 @@
 """Send a staged draft from the assistant's mailbox. Only on the owner's approval (tier 1).
 Usage: python3 scripts/twin/send-draft.py staging/<draft>.md
 Frontmatter: to, cc, subject, in_reply_to (threads it), wait/due (add a waiting-for row),
-             attach (comma-separated file paths, ~ allowed), status: draft
+             attach (comma-separated file paths, ~ allowed), needs_local (work only the main computer can do), status: draft
+Refuses a draft with needs_local: set, or one whose text mentions an attachment while attach: is empty (draft_guard.py).
 """
 import os, re, subprocess, sys, tempfile, time
 
@@ -10,9 +11,13 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 path = sys.argv[1]
 src = open(path).read()
 m = re.match(r"^---\n(.*?)\n---\n(.*)$", src, re.S)
-fm = {k: v.strip().strip("\"'") for k, v in re.findall(r"^(\w+):\s*(.*)$", m.group(1), re.M)}
+fm = {k: v.strip().strip("\"'") for k, v in re.findall(r"^(\w+):[ \t]*(.*)$", m.group(1), re.M)}
 if fm.get("status", "").startswith(("sent", "dropped")):
     sys.exit(f"not sending, status: {fm['status']}")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from draft_guard import blocked
+if why := blocked(fm, m.group(2)):
+    sys.exit(f"not sending, {why}")
 
 with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False) as body:
     body.write(m.group(2).strip("\n") + "\n")

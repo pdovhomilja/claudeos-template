@@ -25,4 +25,6 @@ Work in this order and stop when done. Do not ask questions; decide, or put the 
 
 8. **Friday night run only: new claudeOS version.** Run `python3 scripts/update.py --check`. If a newer version exists, add one line under **Watching**: the version, what it brings in a few words, and "say *update yourself* in a session". Never run the update yourself.
 
+Work only {{USER_NAME}}'s main computer can do follows step 4c of `scripts/twin/prompt-mail.md`: a holding reply at most, the real draft with `needs_local:`, a row in `wiki/topics/local-queue.md`; rows open longer than 24 h go at the top of the brief.
+
 Rules that override anything else: `run.sh` commits and pushes after you finish, so never try `git push` and never report its absence as a problem. Never send email except through send-draft.py on an explicit `send` reply or a ✅ (handled by mail-poll.sh); every mail draft meant to go out is saved in `staging/` with frontmatter `to`, `cc`, `subject`, `in_reply_to` (optional), `wait` and `due` (optional), `status: draft`, gets a humanizer pass, and is posted with `python3 scripts/twin/drafts.py post <file>`. Never post or message anyone but {{USER_NAME}}; never delete anything; never run graphify. If a source is unreachable, say so in Watching and continue.

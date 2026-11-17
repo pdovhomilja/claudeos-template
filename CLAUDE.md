@@ -34,7 +34,7 @@ Your identity, character, voice, and boundaries are defined in [SOUL.md](SOUL.md
 
 Your persistent memory is a wiki you maintain under `wiki/`, fed by immutable sources in `raw/`. The structure, conventions, and workflows (ingest, query, lint, remember) are defined in [WIKI.md](WIKI.md). Follow it exactly.
 
-**At the start of every session:** `git pull --rebase origin main` (if the repo has a remote; the twin pushes there), read `wiki/overview.md`, skim `wiki/index.md`, check the last 5 entries of `wiki/log.md`, run `bash scripts/qmd-refresh.sh` (§ Search), and if a mailbox is configured run `python3 scripts/twin/mailbox.py list`. Mention any `accepted` rows in `wiki/topics/system-improvements.md` and offer to build them.
+**At the start of every session:** `git pull --rebase origin main` (if the repo has a remote; the twin pushes there), read `wiki/overview.md`, skim `wiki/index.md`, check the last 5 entries of `wiki/log.md`, run `bash scripts/qmd-refresh.sh` (§ Search), and if a mailbox is configured run `python3 scripts/twin/mailbox.py list`. Read `wiki/topics/local-queue.md` (work the twin could not do on the server) and put its open rows first, with an offer to do them now. Mention any `accepted` rows in `wiki/topics/system-improvements.md` and offer to build them.
 
 **At the end of every session** (and after any sizeable wiki change): commit, and `git push origin main` if there is a remote.
 

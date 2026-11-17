@@ -10,6 +10,7 @@ State: runs/twin/drafts.json. Only the owner's Discord account counts.
 import json, os, re, subprocess, sys, time, urllib.parse, urllib.request
 from discord import TOKEN, CHANNEL, OWNER, post_text  # scripts/twin/discord.py
 from env import ROOT, RUNS
+from draft_guard import blocked  # scripts/twin/draft_guard.py
 
 OK, NO = "✅", "❌"
 STATE = os.path.join(RUNS, "drafts.json")
@@ -40,7 +41,7 @@ def react(channel, msg, emoji):
 
 def parse(path):
     m = re.match(r"^---\n(.*?)\n---\n(.*)$", open(path).read(), re.S)
-    fm = {k: v.strip().strip("\"'") for k, v in re.findall(r"^(\w+):\s*(.*)$", m.group(1), re.M)}
+    fm = {k: v.strip().strip("\"'") for k, v in re.findall(r"^(\w+):[ \t]*(.*)$", m.group(1), re.M)}
     return fm, m.group(2).strip("\n")
 
 
@@ -54,12 +55,14 @@ def save(state):
 
 def post_version(path, d):
     fm, body = parse(path)
-    head = (f"**v{d['version']}** · {OK} send · {NO} drop · reply here to change it · "
-            f"`send as:` + your full text sends that word for word\n"
-            f"**From:** {os.environ.get('MAIL_FROM', '')}\n**To:** {fm['to']}\n"
+    why = blocked(fm, body)
+    line = (f"**v{d['version']}** · ⛔ not sendable yet ({why}) · {NO} drop · reply here to change it\n" if why else
+            f"**v{d['version']}** · {OK} send · {NO} drop · reply here to change it · "
+            f"`send as:` + your full text sends that word for word\n")
+    head = (line + f"**From:** {os.environ.get('MAIL_FROM', '')}\n**To:** {fm['to']}\n"
             + (f"**Cc:** {fm['cc']}\n" if fm.get("cc") else "") + f"**Subject:** {fm['subject']}")
     d["msg"] = say(d["thread"], head)
-    for emoji in (OK, NO):
+    for emoji in (NO,) if why else (OK, NO):
         react(d["thread"], d["msg"], emoji)
     for i in range(0, len(body), 1900):
         d["last"] = say(d["thread"], body[i:i + 1900])
@@ -111,7 +114,12 @@ def check():
             d["status"] = "closed"
             continue
         if reacted(d, d["msg"], OK):
-            send(path, d, f"(v{d['version']})")
+            why = blocked(*parse(path))
+            if not why:
+                send(path, d, f"(v{d['version']})")
+            elif "b" + d["msg"] not in d.get("warned", []):  # say it once per version, keep the draft open
+                say(d["thread"], f"⛔ Not sent, {why}. Fix the draft on the main computer and repost it; then {OK} the new version.")
+                d.setdefault("warned", []).append("b" + d["msg"])
         elif reacted(d, d["msg"], NO):
             d["status"] = "dropped"
             src = open(path).read()
